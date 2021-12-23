@@ -1,18 +1,22 @@
 #pragma once
 
+#include <parameters.h>
 #include <vector.h>
 
+namespace geometry {
+template <typename VectorNumericType = DefaultNumericType>
 class Ray {
 public:
-    Ray(Vector origin, Vector direction) : origin_(origin), direction_(direction) {
+    Ray(Vector3D<VectorNumericType> origin, Vector3D<VectorNumericType> direction)
+        : origin_(origin), direction_(direction) {
     }
 
 public:
-    const Vector& GetOrigin() const {
+    const Vector3D<VectorNumericType>& GetOrigin() const {
         return origin_;
     }
 
-    const Vector& GetDirection() const {
+    const Vector3D<VectorNumericType>& GetDirection() const {
         return direction_;
     }
 
@@ -21,6 +25,7 @@ public:
     }
 
 private:
-    Vector origin_;
-    Vector direction_;
+    Vector3D<VectorNumericType> origin_;
+    Vector3D<VectorNumericType> direction_;
 };
+}  // namespace geometry
