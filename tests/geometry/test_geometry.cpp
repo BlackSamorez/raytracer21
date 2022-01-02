@@ -1,11 +1,11 @@
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "../catch.hpp"
 
 #include <cmath>
 #include <string>
 #include <optional>
 
-#include <geometry.h>
+#include "geometry.h"
 
 const double kX = 123.;
 const double kY = 456.;

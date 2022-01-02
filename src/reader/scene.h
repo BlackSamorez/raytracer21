@@ -11,7 +11,7 @@
 #include <fstream>
 #include <sstream>
 
-std::vector<std::string> ParseLine(std::string line) {
+std::vector<std::string> ParseLine(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> parsed_line;
 
@@ -21,7 +21,7 @@ std::vector<std::string> ParseLine(std::string line) {
     return parsed_line;
 }
 
-std::pair<int, int> ParseAttribute(std::string line) {
+std::pair<int, int> ParseAttribute(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> parsed_line;
     std::string s;
@@ -30,7 +30,7 @@ std::pair<int, int> ParseAttribute(std::string line) {
         if (!s.empty()) {
             parsed_line.push_back(s);
         } else {
-            parsed_line.push_back("0");
+            parsed_line.emplace_back("0");
         }
     }
     if (parsed_line.size() < 3) {
@@ -40,7 +40,7 @@ std::pair<int, int> ParseAttribute(std::string line) {
     return std::make_pair(std::stod(parsed_line[0]), std::stod(parsed_line[2]));
 }
 
-std::string GetFolderPathFromFilePath(std::string s) {
+std::string GetFolderPathFromFilePath(const std::string& s) {
     char sep = '/';
 
     size_t i = s.rfind(sep, s.length());
@@ -56,22 +56,22 @@ class Scene {
     std::vector<Light> lights_;
     std::map<std::string, Material*> material_pointers_;
     std::map<std::string, Material> materials_;
-    std::vector<Vector*> normals_;
+    std::vector<geometry::Vector3D<>*> normals_;
 
 public:
-    const std::vector<Object>& GetObjects() const {
+    [[nodiscard]] const std::vector<Object>& GetObjects() const {
         return objects_;
     }
 
-    const std::vector<SphereObject>& GetSphereObjects() const {
+    [[nodiscard]] const std::vector<SphereObject>& GetSphereObjects() const {
         return sphere_objects_;
     }
 
-    const std::vector<Light>& GetLights() const {
+    [[nodiscard]] const std::vector<Light>& GetLights() const {
         return lights_;
     }
 
-    const std::map<std::string, Material>& GetMaterials() const {
+    [[nodiscard]] const std::map<std::string, Material>& GetMaterials() const {
         return materials_;
     }
 
@@ -107,7 +107,7 @@ inline std::map<std::string, Material*> ReadMaterials(std::string_view filename)
 
         if (attributes[0] == "newmtl") {
             if (inside_material) {
-                Material* newly_placed_material = new Material();
+                auto* newly_placed_material = new Material();
                 *newly_placed_material = current_material;
                 materials[newly_placed_material->name] = newly_placed_material;
             }
@@ -158,7 +158,7 @@ inline std::map<std::string, Material*> ReadMaterials(std::string_view filename)
 
 inline Scene ReadScene(std::string_view filename) {
     Scene scene;
-    std::vector<Vector> vertices;
+    std::vector<geometry::Vector3D<>> vertices;
 
     std::ifstream infile(static_cast<std::string>(filename));
     std::string line;
@@ -171,8 +171,8 @@ inline Scene ReadScene(std::string_view filename) {
         }
 
         if (attributes[0] == "v") {
-            vertices.push_back(Vector{std::stod(attributes[1]), std::stod(attributes[2]),
-                                      std::stod(attributes[3])});
+            vertices.push_back(geometry::Vector3D{
+                std::stod(attributes[1]), std::stod(attributes[2]), std::stod(attributes[3])});
         }
 
         if (attributes[0] == "vt") {
@@ -180,8 +180,8 @@ inline Scene ReadScene(std::string_view filename) {
         }
 
         if (attributes[0] == "vn") {
-            Vector* normal = new Vector{std::stod(attributes[1]), std::stod(attributes[2]),
-                                        std::stod(attributes[3])};
+            auto* normal = new geometry::Vector3D{
+                std::stod(attributes[1]), std::stod(attributes[2]), std::stod(attributes[3])};
             scene.normals_.push_back(normal);
         }
 
@@ -193,7 +193,7 @@ inline Scene ReadScene(std::string_view filename) {
                 indices.push_back(ParseAttribute(attributes[i + 2]));
                 indices.push_back(ParseAttribute(attributes[i + 3]));
 
-                std::vector<Vector*> normals;
+                std::vector<geometry::Vector3D<>*> normals;
                 for (int j = 0; j < 3; ++j) {
                     if (indices[j].first < 1) {
                         indices[j].first = vertices.size() + indices[j].first;
@@ -212,10 +212,11 @@ inline Scene ReadScene(std::string_view filename) {
                     }
                 }
 
-                Object object = {current_material,
-                                 Triangle{vertices[indices[0].first], vertices[indices[1].first],
-                                          vertices[indices[2].first]},
-                                 normals};
+                Object object = {
+                    current_material,
+                    geometry::Triangle{vertices[indices[0].first], vertices[indices[1].first],
+                                       vertices[indices[2].first]},
+                    normals};
                 scene.objects_.push_back(object);
             }
         }
@@ -232,17 +233,19 @@ inline Scene ReadScene(std::string_view filename) {
 
         if (attributes[0] == "S") {
             SphereObject sphere_object = {
-                current_material, Sphere{Vector{std::stod(attributes[1]), std::stod(attributes[2]),
-                                                std::stod(attributes[3])},
-                                         std::stod(attributes[4])}};
+                current_material, geometry::Sphere{geometry::Vector3D{std::stod(attributes[1]),
+                                                                      std::stod(attributes[2]),
+                                                                      std::stod(attributes[3])},
+                                                   std::stod(attributes[4])}};
             scene.sphere_objects_.push_back(sphere_object);
         }
 
         if (attributes[0] == "P") {
-            scene.lights_.push_back(Light{Vector{std::stod(attributes[1]), std::stod(attributes[2]),
-                                                 std::stod(attributes[3])},
-                                          Vector{std::stod(attributes[4]), std::stod(attributes[5]),
-                                                 std::stod(attributes[6])}});
+            scene.lights_.push_back(
+                Light{geometry::Vector3D{std::stod(attributes[1]), std::stod(attributes[2]),
+                                         std::stod(attributes[3])},
+                      geometry::Vector3D{std::stod(attributes[4]), std::stod(attributes[5]),
+                                         std::stod(attributes[6])}});
         }
     }
 

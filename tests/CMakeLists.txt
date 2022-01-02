@@ -1,2 +1,6 @@
-add_executable(test_geometry test_geometry.cpp)
+include_directories(.)
+
+add_executable(test_geometry geometry/test_geometry.cpp)
 add_test(NAME test_geometry COMMAND test_geometry)
+
+add_executable(test_debug_mode debug_mode/test_debug_mode.cpp)
