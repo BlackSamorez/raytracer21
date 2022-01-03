@@ -10,6 +10,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
 std::vector<std::string> ParseLine(const std::string& line) {
     std::istringstream iss(line);
@@ -21,7 +22,7 @@ std::vector<std::string> ParseLine(const std::string& line) {
     return parsed_line;
 }
 
-std::pair<int, int> ParseAttribute(const std::string& line) {
+std::pair<int, int> ParsePointTriplet(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> parsed_line;
     std::string s;
@@ -34,10 +35,10 @@ std::pair<int, int> ParseAttribute(const std::string& line) {
         }
     }
     if (parsed_line.size() < 3) {
-        return std::make_pair(std::stod(parsed_line[0]), 0);
+        return {std::stod(parsed_line[0]), 0};  // zero means no normal
     }
 
-    return std::make_pair(std::stod(parsed_line[0]), std::stod(parsed_line[2]));
+    return {std::stod(parsed_line[0]), std::stod(parsed_line[2])};
 }
 
 std::string GetFolderPathFromFilePath(const std::string& s) {
@@ -45,19 +46,12 @@ std::string GetFolderPathFromFilePath(const std::string& s) {
 
     size_t i = s.rfind(sep, s.length());
     if (i != std::string::npos) {
-        return (s.substr(0, i));
+        return s.substr(0, i);
     }
     return "";
 }
 
 class Scene {
-    std::vector<Object> objects_;
-    std::vector<SphereObject> sphere_objects_;
-    std::vector<Light> lights_;
-    std::map<std::string, Material*> material_pointers_;
-    std::map<std::string, Material> materials_;
-    std::vector<geometry::Vector3D<>*> normals_;
-
 public:
     [[nodiscard]] const std::vector<Object>& GetObjects() const {
         return objects_;
@@ -71,28 +65,31 @@ public:
         return lights_;
     }
 
-    [[nodiscard]] const std::map<std::string, Material>& GetMaterials() const {
-        return materials_;
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<Material>>& GetMaterials() const {
+        return materials_pointers_;
     }
 
+public:
     void BuildMaterialsFromPointers() {
-        materials_.clear();
-        for (auto [key, value] : material_pointers_) {
-            materials_[key] = *value;
+        for (const auto& [name, pointer] : materials_pointers_) {
+            materials_[name] = *pointer;
         }
     }
 
-    virtual ~Scene() {
-        for (auto [key, pointer] : material_pointers_) {
-            delete pointer;
-        }
-    }
+private:
+    std::vector<Object> objects_;
+    std::vector<SphereObject> sphere_objects_;
+    std::vector<Light> lights_;
+    std::map<std::string, std::unique_ptr<Material>> materials_pointers_;
+    std::map<std::string, Material> materials_;
+    std::vector<std::unique_ptr<geometry::Vector3D<>>> normals_;
 
+private:
     friend inline Scene ReadScene(std::string_view filename);
 };
 
-inline std::map<std::string, Material*> ReadMaterials(std::string_view filename) {
-    std::map<std::string, Material*> materials;
+inline std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view filename) {
+    std::map<std::string, std::unique_ptr<Material>> materials;
 
     std::ifstream infile(static_cast<std::string>(filename));
     std::string line;
@@ -107,9 +104,7 @@ inline std::map<std::string, Material*> ReadMaterials(std::string_view filename)
 
         if (attributes[0] == "newmtl") {
             if (inside_material) {
-                auto* newly_placed_material = new Material();
-                *newly_placed_material = current_material;
-                materials[newly_placed_material->name] = newly_placed_material;
+                materials[current_material.name] = std::make_unique<Material>(current_material);
             }
             current_material = Material{};
             inside_material = true;
@@ -149,14 +144,13 @@ inline std::map<std::string, Material*> ReadMaterials(std::string_view filename)
                                        std::stod(attributes[3])};
         }
     }
-    Material* newly_placed_material = new Material();
-    *newly_placed_material = current_material;
-    materials[newly_placed_material->name] = newly_placed_material;
+
+    materials[current_material.name] = std::make_unique<Material>(current_material);
 
     return materials;
 }
 
-inline Scene ReadScene(std::string_view filename) {
+Scene ReadScene(std::string_view filename) {
     Scene scene;
     std::vector<geometry::Vector3D<>> vertices;
 
@@ -180,39 +174,39 @@ inline Scene ReadScene(std::string_view filename) {
         }
 
         if (attributes[0] == "vn") {
-            auto* normal = new geometry::Vector3D{
-                std::stod(attributes[1]), std::stod(attributes[2]), std::stod(attributes[3])};
-            scene.normals_.push_back(normal);
+            auto normal = geometry::Vector3D{std::stod(attributes[1]), std::stod(attributes[2]),
+                                             std::stod(attributes[3])};
+            scene.normals_.push_back(std::make_unique<geometry::Vector3D<>>(normal));
         }
 
         if (attributes[0] == "f") {
             size_t number_of_vertices = attributes.size() - 1;
             for (size_t i = 0; i < number_of_vertices - 2; ++i) {
                 std::vector<std::pair<int, int>> indices;
-                indices.push_back(ParseAttribute(attributes[1]));
-                indices.push_back(ParseAttribute(attributes[i + 2]));
-                indices.push_back(ParseAttribute(attributes[i + 3]));
+                indices.push_back(ParsePointTriplet(attributes[1]));
+                indices.push_back(ParsePointTriplet(attributes[i + 2]));
+                indices.push_back(ParsePointTriplet(attributes[i + 3]));
 
                 std::vector<geometry::Vector3D<>*> normals;
                 for (int j = 0; j < 3; ++j) {
                     if (indices[j].first < 1) {
-                        indices[j].first = vertices.size() + indices[j].first;
+                        indices[j].first = static_cast<int>(vertices.size()) + indices[j].first;
                     } else {
                         indices[j].first--;
                     }
-                    if (indices[j].second == 0) {
+                    if (indices[j].second == 0) {  // no normal
                         normals.push_back(nullptr);
                     } else {
                         if (indices[j].second < 1) {
                             normals.push_back(
-                                scene.normals_[scene.normals_.size() + indices[j].second]);
+                                scene.normals_[scene.normals_.size() + indices[j].second].get());
                         } else {
-                            normals.push_back(scene.normals_[indices[j].second - 1]);
+                            normals.push_back(scene.normals_[indices[j].second - 1].get());
                         }
                     }
                 }
 
-                Object object = {
+                Object object{
                     current_material,
                     geometry::Triangle{vertices[indices[0].first], vertices[indices[1].first],
                                        vertices[indices[2].first]},
@@ -222,13 +216,13 @@ inline Scene ReadScene(std::string_view filename) {
         }
 
         if (attributes[0] == "mtllib") {
-            scene.material_pointers_ =
+            scene.materials_pointers_ =
                 ReadMaterials(GetFolderPathFromFilePath(static_cast<std::string>(filename)) + "/" +
                               attributes[1]);
         }
 
         if (attributes[0] == "usemtl") {
-            current_material = scene.material_pointers_.at(attributes[1]);
+            current_material = scene.materials_pointers_.at(attributes[1]).get();
         }
 
         if (attributes[0] == "S") {

@@ -4,25 +4,22 @@
 #include <material.h>
 #include <sphere.h>
 
+#include <memory>
+
 struct Object {
-    const Material *material = nullptr;
-    Triangle polygon;
-    const std::vector<Vector *> normals;
-
-    const Vector *GetNormal(size_t index) const {
-        if (normals.empty()) {
-            return nullptr;
-        } else {
-            return normals[index];
-        }
+public:
+    [[nodiscard]] geometry::Vector3D<>*& GetNormal(size_t index) {
+        return normals[index];
     }
 
-    const Triangle &GetPolygon() const {
-        return polygon;
-    }
+public:
+    const Material* material = nullptr;
+    geometry::Triangle<> polygon;
+    std::vector<geometry::Vector3D<>*> normals;
 };
 
 struct SphereObject {
-    const Material *material = nullptr;
-    Sphere sphere;
+public:
+    const Material* material = nullptr;
+    geometry::Sphere<> sphere;
 };

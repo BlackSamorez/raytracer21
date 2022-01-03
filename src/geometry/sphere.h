@@ -5,6 +5,7 @@
 
 namespace geometry {
 template <typename VectorNumericType = DefaultNumericType>
+requires std::floating_point<VectorNumericType>
 class Sphere {
 public:
     Sphere(Vector3D<VectorNumericType> center, double radius) : center_(center), radius_(radius) {

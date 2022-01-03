@@ -10,9 +10,10 @@
 #include <optional>
 
 namespace geometry {
-template<typename VectorNumericType>
-std::optional<Intersection<VectorNumericType>> GetIntersection(const Ray<VectorNumericType>& ray,
-                                                         const Sphere<VectorNumericType>& sphere) {
+template <typename VectorNumericType>
+requires std::floating_point<VectorNumericType>
+std::optional<Intersection<VectorNumericType>> GetIntersection(
+    const Ray<VectorNumericType>& ray, const Sphere<VectorNumericType>& sphere) {
     auto center = sphere.GetCenter() - ray.GetOrigin();
 
     auto center_ray_projection = DotProduct(center, ray.GetDirection());
@@ -60,9 +61,10 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(const Ray<VectorN
     return Intersection(relative_position + ray.GetOrigin(), normal, Length(relative_position));
 }
 
-template<typename VectorNumericType>
-std::optional<Intersection<VectorNumericType>> GetIntersection(const Ray<VectorNumericType>& ray,
-                                                         const Triangle<VectorNumericType>& triangle) {
+template <typename VectorNumericType>
+requires std::floating_point<VectorNumericType>
+std::optional<Intersection<VectorNumericType>> GetIntersection(
+    const Ray<VectorNumericType>& ray, const Triangle<VectorNumericType>& triangle) {
     const VectorNumericType calculation_epsilon = 0.0000001;
     auto vertex0 = triangle.GetVertex(0);
     auto vertex1 = triangle.GetVertex(1);
@@ -106,9 +108,10 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(const Ray<VectorN
     }
 }
 
-template<typename VectorNumericType>
+template <typename VectorNumericType>
+requires std::floating_point<VectorNumericType>
 Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericType>& triangle,
-                                           const Vector3D<VectorNumericType>& point) {
+                                                 const Vector3D<VectorNumericType>& point) {
     auto s_bcx = Triangle({triangle.GetVertex(1), triangle.GetVertex(2), point}).Area() / 2;
     auto s_cax = Triangle({triangle.GetVertex(2), triangle.GetVertex(0), point}).Area() / 2;
     auto s_abx = Triangle({triangle.GetVertex(0), triangle.GetVertex(1), point}).Area() / 2;
@@ -116,10 +119,11 @@ Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericTyp
     return Vector3D({s_bcx, s_cax, s_abx});
 }
 
-template<typename VectorNumericType, typename EtaNumericType>
+template <typename VectorNumericType, typename EtaNumericType>
+requires std::floating_point<VectorNumericType> && std::floating_point<EtaNumericType>
 std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericType>& ray,
-                                             const Vector3D<VectorNumericType>& normal,
-                                             EtaNumericType eta) {
+                                                   const Vector3D<VectorNumericType>& normal,
+                                                   EtaNumericType eta) {
     auto normalized_ray = ray;
     normalized_ray.Normalize();
 
@@ -130,9 +134,10 @@ std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericT
     return eta * normalized_ray + (eta * c - std::sqrt(1 - eta * eta * (1 - c * c))) * normal;
 }
 
-template<typename VectorNumericType>
+template <typename VectorNumericType>
+requires std::floating_point<VectorNumericType>
 Vector3D<VectorNumericType> Reflect(Vector3D<VectorNumericType> ray,
-                              const Vector3D<VectorNumericType>& normal) {
+                                    const Vector3D<VectorNumericType>& normal) {
     return ray - normal * DotProduct(normal, ray) * 2;
 }
 }  // namespace geometry

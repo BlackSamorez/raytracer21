@@ -5,6 +5,7 @@
 
 namespace geometry {
 template <typename VectorNumericType = DefaultNumericType>
+requires std::floating_point<VectorNumericType>
 class Intersection {
 public:
     Intersection(Vector3D<VectorNumericType> pos, Vector3D<VectorNumericType> norm, double dist)

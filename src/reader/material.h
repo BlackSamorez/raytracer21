@@ -4,6 +4,7 @@
 #include <string>
 
 struct Material {
+public:
     std::string name;
     geometry::Vector3D<> ambient_color = {0, 0, 0};
     geometry::Vector3D<> diffuse_color = {0, 0, 0};
