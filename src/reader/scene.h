@@ -65,8 +65,8 @@ public:
         return lights_;
     }
 
-    [[nodiscard]] const std::map<std::string, std::unique_ptr<Material>>& GetMaterials() const {
-        return materials_pointers_;
+    [[nodiscard]] const std::map<std::string, Material>& GetMaterials() const {
+        return materials_;
     }
 
 public:
@@ -88,7 +88,7 @@ private:
     friend inline Scene ReadScene(std::string_view filename);
 };
 
-inline std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view filename) {
+std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view filename) {
     std::map<std::string, std::unique_ptr<Material>> materials;
 
     std::ifstream infile(static_cast<std::string>(filename));
