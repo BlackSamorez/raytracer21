@@ -14,5 +14,4 @@ include_directories(src/geometry)
 include_directories(src/raytracer)
 include_directories(src/reader)
 
-enable_testing()
 add_subdirectory(tests)

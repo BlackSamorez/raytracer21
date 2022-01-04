@@ -1,0 +1,5 @@
+add_executable(test_raytracer test_raytracer.cpp)
+target_link_libraries(test_raytracer PRIVATE Catch2::Catch2)
+target_link_libraries(test_raytracer PRIVATE ${PNG_LIBRARY} ${JPEG_LIBRARIES})
+target_compile_definitions(test_raytracer PUBLIC PROGRAM_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
+catch_discover_tests(test_raytracer)

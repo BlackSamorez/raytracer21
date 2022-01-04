@@ -1,0 +1,5 @@
+add_executable(test_debug_mode test_debug_mode.cpp)
+target_link_libraries(test_debug_mode PRIVATE Catch2::Catch2)
+target_link_libraries(test_debug_mode PRIVATE ${PNG_LIBRARY} ${JPEG_LIBRARIES})
+target_compile_definitions(test_debug_mode PUBLIC PROGRAM_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
+catch_discover_tests(test_debug_mode)
