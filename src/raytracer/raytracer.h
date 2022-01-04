@@ -22,7 +22,7 @@ std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersect
             return {trivial_normal_intersection, object.material};
         }
     }
-    geometry::Vector3D true_normal = LinearCombination(
+    auto true_normal = LinearCombination(
         GetBarycentricCoords(object.polygon, trivial_normal_intersection.value().GetPosition()),
         object.normals);
     true_normal.Normalize();
@@ -69,7 +69,7 @@ public:
 
 public:
     geometry::Ray<> operator()(int horizontal_pixel_index, int vertical_pixel_index) const {
-        geometry::Vector3D<> direction =
+        auto direction =
             (static_cast<double>((2 * horizontal_pixel_index - screen_width_ + 1)) / 2) *
                 right_unit_ +
             (static_cast<double>((2 * vertical_pixel_index - screen_height_ + 1)) / 2) * up_unit_ -
@@ -178,8 +178,7 @@ geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
     for (const auto& light : scene.GetLights()) {
         auto illumination = LightReach(scene, light, intersection.GetPosition());
         if (!illumination.Zero()) {
-            geometry::Vector3D<> light_direction = light.position - intersection.GetPosition();
-            light_direction.Normalize();
+            auto light_direction = (light.position - intersection.GetPosition()).Normalize();
             total_diffusive_illumination +=
                 illumination * std::max(0.0, DotProduct(light_direction, intersection.GetNormal()));
         }
@@ -213,22 +212,26 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
         return geometry::Vector3D<>{0, 0, 0};
     }
 
-    std::pair<std::optional<geometry::Intersection<>>, const Material*> possible_intersection =
-        FindClosestIntersectionAndItsMaterial(scene, ray);
-    if (!possible_intersection.first) {
+    auto [possible_intersection, material] = FindClosestIntersectionAndItsMaterial(scene, ray);
+    if (!possible_intersection) {
         return geometry::Vector3D<>{0, 0, 0};
     }
-    geometry::Intersection intersection = possible_intersection.first.value();
-    const Material* material = possible_intersection.second;
+    auto intersection = possible_intersection.value();
 
-    geometry::Vector3D<> illumination_ambient = material->ambient_color + material->intensity;
-    geometry::Vector3D<> illumination_diffusive =
-        material->diffuse_color * CalculateDiffuseIllumination(scene, intersection) *
-        material->albedo[0];
-    geometry::Vector3D<> illumination_specular =
-        material->specular_color *
-        CalculateSpecularIllumination(scene, intersection, material, ray) * material->albedo[0];
+    // Ambient
+    auto illumination_ambient = material->ambient_color + material->intensity;
 
+    // Diffusive
+    auto illumination_diffusive = material->diffuse_color *
+                                  CalculateDiffuseIllumination(scene, intersection) *
+                                  material->albedo[0];
+
+    // Specular
+    auto illumination_specular = material->specular_color *
+                                 CalculateSpecularIllumination(scene, intersection, material, ray) *
+                                 material->albedo[0];
+
+    // Reflected
     geometry::Ray reflected_ray = {intersection.GetPosition(),
                                    Reflect(ray.GetDirection(), intersection.GetNormal())};
     reflected_ray.Propell(kEpsilon);  // TODO check if works
@@ -240,6 +243,7 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
         illumination_reflected = {0, 0, 0};
     }
 
+    // Refracted
     geometry::Vector3D<> illumination_refracted;
     std::optional<geometry::Vector3D<>> refracted_ray_direction;
     if (!inside) {
@@ -265,21 +269,15 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
         illumination_refracted *= (material->albedo[2] + material->albedo[1]) / material->albedo[2];
     }
 
-    geometry::Vector3D<> total_illumination = {0, 0, 0};
-    total_illumination += illumination_ambient;
-    total_illumination += illumination_diffusive;
-    total_illumination += illumination_specular;
-    total_illumination += illumination_reflected;
-    total_illumination += illumination_refracted;
-
-    return total_illumination;
+    return illumination_ambient + illumination_diffusive + illumination_specular +
+           illumination_reflected + illumination_refracted;
 }
 
 Image Render(const std::string& filename, const CameraOptions& camera_options,
              const RenderOptions& render_options) {
     Image image(camera_options.screen_width, camera_options.screen_height);
     image.PrepareImage(image.Width(), image.Height());
-    Scene scene = ReadScene(filename);
+    auto scene = ReadScene(filename);
     RayCaster basic_screen_thrower(camera_options);
 
     if (render_options.mode == RenderMode::kDepth) {
@@ -291,7 +289,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
             for (int vertical_pixel_index = 0; vertical_pixel_index < image.Height();
                  ++vertical_pixel_index) {
                 auto cast_ray = basic_screen_thrower(horizontal_pixel_index, vertical_pixel_index);
-                std::optional<geometry::Intersection<>> possible_intersection =
+                auto possible_intersection =
                     FindClosestIntersectionAndItsMaterial(scene, cast_ray).first;
 
                 if (possible_intersection) {
@@ -316,7 +314,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
             }
         }
 
-        // Build normal pixels
+        // Build pixels
         for (int horizontal_pixel_index = 0; horizontal_pixel_index < image.Width();
              ++horizontal_pixel_index) {
             for (int vertical_pixel_index = 0; vertical_pixel_index < image.Height();
@@ -325,8 +323,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
                     (depths[image.Width() * vertical_pixel_index + horizontal_pixel_index] -
                      kEpsilon) *
                     256);
-                RGB pixel{brightness, brightness, brightness};
-                image.SetPixel(pixel, vertical_pixel_index, horizontal_pixel_index);
+                image.SetPixel({brightness, brightness, brightness}, vertical_pixel_index, horizontal_pixel_index);
             }
         }
     }
@@ -340,7 +337,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
                  ++vertical_pixel_index) {
                 auto cast_ray = basic_screen_thrower(horizontal_pixel_index, vertical_pixel_index);
                 // Check all possible intersections
-                std::optional<geometry::Intersection<>> possible_intersection =
+                auto possible_intersection =
                     FindClosestIntersectionAndItsMaterial(scene, cast_ray).first;
 
                 if (possible_intersection) {
@@ -359,19 +356,18 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
             pseudo_pixels[i] += geometry::Vector3D<>{0.5, 0.5, 0.5};
         }
 
-        // Build normal pixels
+        // Build pixels
         for (int horizontal_pixel_index = 0; horizontal_pixel_index < image.Width();
              ++horizontal_pixel_index) {
             for (int vertical_pixel_index = 0; vertical_pixel_index < image.Height();
                  ++vertical_pixel_index) {
-                geometry::Vector3D<> pseudo_pixel =
+                auto pseudo_pixel =
                     pseudo_pixels[image.Width() * vertical_pixel_index + horizontal_pixel_index];
 
                 int red = static_cast<int>((pseudo_pixel[0] - kEpsilon) * 256);
                 int green = static_cast<int>((pseudo_pixel[1] - kEpsilon) * 256);
                 int blue = static_cast<int>((pseudo_pixel[2] - kEpsilon) * 256);
-                RGB pixel{red, green, blue};
-                image.SetPixel(pixel, vertical_pixel_index, horizontal_pixel_index);
+                image.SetPixel({red, green, blue}, vertical_pixel_index, horizontal_pixel_index);
             }
         }
     }
@@ -393,7 +389,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
         }
         // Normalize
         ToneMappingAndGammaCorrection(pseudo_pixels, image.Width() * image.Height());
-        // Build normal pixels
+        // Build pixels
         for (int horizontal_pixel_index = 0; horizontal_pixel_index < image.Width();
              ++horizontal_pixel_index) {
             for (int vertical_pixel_index = 0; vertical_pixel_index < image.Height();
@@ -404,8 +400,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
                 int red = static_cast<int>((pseudo_pixel[0] - kEpsilon) * 256);
                 int green = static_cast<int>((pseudo_pixel[1] - kEpsilon) * 256);
                 int blue = static_cast<int>((pseudo_pixel[2] - kEpsilon) * 256);
-                RGB pixel{red, green, blue};
-                image.SetPixel(pixel, vertical_pixel_index, horizontal_pixel_index);
+                image.SetPixel({red, green, blue}, vertical_pixel_index, horizontal_pixel_index);
             }
         }
     }
