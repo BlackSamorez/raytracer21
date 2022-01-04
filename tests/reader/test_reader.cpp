@@ -3,9 +3,7 @@
 #endif
 #include <catch2/catch.hpp>
 
-#include <cmath>
 #include <string>
-#include <optional>
 
 #include "scene.h"
 
@@ -16,13 +14,13 @@
 
 TEST_CASE("Read without errors", "[raytracer]") {
     const std::string dir_path(PROGRAM_DIR);
-    const auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
+    auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
 }
 
 TEST_CASE("Materials read correctly") {
     const std::string dir_path(PROGRAM_DIR);
     auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
-    const auto& materials = scene.GetMaterials();
+    const auto& materials = Scene::BuildMaterialsFromPointers(scene.materials_pointers_);
 
     SECTION("Number of materials") {
         REQUIRE(materials.size() == 8);

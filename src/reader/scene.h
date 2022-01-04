@@ -12,7 +12,15 @@
 #include <sstream>
 #include <memory>
 
-std::vector<std::string> ParseLine(const std::string& line) {
+typedef std::map<std::string, std::unique_ptr<Material>> MaterialPointers;
+
+inline geometry::Vector3D<> GetThreeNumbers(const std::vector<std::string>& attributes,
+                                            int begin = 1) {
+    return {std::stod(attributes[begin]), std::stod(attributes[begin + 1]),
+            std::stod(attributes[begin + 2])};
+}
+
+inline std::vector<std::string> ParseLine(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> parsed_line;
 
@@ -22,7 +30,7 @@ std::vector<std::string> ParseLine(const std::string& line) {
     return parsed_line;
 }
 
-std::pair<int, int> ParsePointTriplet(const std::string& line) {
+inline std::pair<int, int> ParsePointTriplet(const std::string& line) {
     std::istringstream iss(line);
     std::vector<std::string> parsed_line;
     std::string s;
@@ -41,7 +49,7 @@ std::pair<int, int> ParsePointTriplet(const std::string& line) {
     return {std::stod(parsed_line[0]), std::stod(parsed_line[2])};
 }
 
-std::string GetFolderPathFromFilePath(const std::string& s) {
+inline std::string GetFolderPathFromFilePath(const std::string& s) {
     char sep = '/';
 
     size_t i = s.rfind(sep, s.length());
@@ -65,38 +73,36 @@ public:
         return lights_;
     }
 
-    [[nodiscard]] const std::map<std::string, Material>& GetMaterials() const {
-        return materials_;
+public:
+    static std::map<std::string, Material> BuildMaterialsFromPointers(
+        const MaterialPointers& pointers) {
+        static std::map<std::string, Material> materials;
+        if (materials.size() != pointers.size()) { // None of them are supposed to change
+            for (const auto& [name, pointer] : pointers) {
+                materials[name] = *pointer;
+            }
+        }
+        return materials;
     }
 
 public:
-    void BuildMaterialsFromPointers() {
-        for (const auto& [name, pointer] : materials_pointers_) {
-            materials_[name] = *pointer;
-        }
-    }
+    const std::vector<Object> objects_;
+    const std::vector<SphereObject> sphere_objects_;
+    const std::vector<Light> lights_;
 
-private:
-    std::vector<Object> objects_;
-    std::vector<SphereObject> sphere_objects_;
-    std::vector<Light> lights_;
-    std::map<std::string, std::unique_ptr<Material>> materials_pointers_;
-    std::map<std::string, Material> materials_;
-    std::vector<std::unique_ptr<geometry::Vector3D<>>> normals_;
-
-private:
-    friend inline Scene ReadScene(std::string_view filename);
+public:  // heap held
+    const MaterialPointers materials_pointers_;
+    const std::vector<std::unique_ptr<geometry::Vector3D<>>> normals_;
 };
 
-std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view filename) {
+MaterialPointers ConstructMaterials(std::istream& input) {
     std::map<std::string, std::unique_ptr<Material>> materials;
 
-    std::ifstream infile(static_cast<std::string>(filename));
     std::string line;
-
     bool inside_material = false;
     Material current_material;
-    while (std::getline(infile, line)) {
+
+    while (std::getline(input, line)) {
         std::vector<std::string> attributes = ParseLine(line);
         if (attributes.empty()) {
             continue;
@@ -112,23 +118,19 @@ std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view 
         }
 
         if (attributes[0] == "Ka") {
-            current_material.ambient_color = {std::stod(attributes[1]), std::stod(attributes[2]),
-                                              std::stod(attributes[3])};
+            current_material.ambient_color = GetThreeNumbers(attributes);
         }
 
         if (attributes[0] == "Kd") {
-            current_material.diffuse_color = {std::stod(attributes[1]), std::stod(attributes[2]),
-                                              std::stod(attributes[3])};
+            current_material.diffuse_color = GetThreeNumbers(attributes);
         }
 
         if (attributes[0] == "Ks") {
-            current_material.specular_color = {std::stod(attributes[1]), std::stod(attributes[2]),
-                                               std::stod(attributes[3])};
+            current_material.specular_color = GetThreeNumbers(attributes);
         }
 
         if (attributes[0] == "Ke") {
-            current_material.intensity = {std::stod(attributes[1]), std::stod(attributes[2]),
-                                          std::stod(attributes[3])};
+            current_material.intensity = GetThreeNumbers(attributes);
         }
 
         if (attributes[0] == "Ns") {
@@ -140,8 +142,7 @@ std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view 
         }
 
         if (attributes[0] == "al") {
-            current_material.albedo = {std::stod(attributes[1]), std::stod(attributes[2]),
-                                       std::stod(attributes[3])};
+            current_material.albedo = GetThreeNumbers(attributes);
         }
     }
 
@@ -150,23 +151,32 @@ std::map<std::string, std::unique_ptr<Material>> ReadMaterials(std::string_view 
     return materials;
 }
 
-Scene ReadScene(std::string_view filename) {
-    Scene scene;
-    std::vector<geometry::Vector3D<>> vertices;
-
+MaterialPointers ReadMaterials(std::string_view filename) {
     std::ifstream infile(static_cast<std::string>(filename));
-    std::string line;
+    return ConstructMaterials(infile);
+}
 
+Scene ConstructScene(std::istream& input, const std::string& path) {
+    // Material fields
+    std::vector<Object> objects;
+    std::vector<SphereObject> sphere_objects;
+    std::vector<Light> lights;
+    MaterialPointers materials_pointers;
+    std::vector<std::unique_ptr<geometry::Vector3D<>>> normal_pointers;
+
+    // Aux objects
+    std::vector<geometry::Vector3D<>> vertices;
+    std::string line;
     Material* current_material = nullptr;
-    while (std::getline(infile, line)) {
+
+    while (std::getline(input, line)) {
         std::vector<std::string> attributes = ParseLine(line);
         if (attributes.empty()) {
             continue;
         }
 
         if (attributes[0] == "v") {
-            vertices.push_back(geometry::Vector3D{
-                std::stod(attributes[1]), std::stod(attributes[2]), std::stod(attributes[3])});
+            vertices.push_back(GetThreeNumbers(attributes));
         }
 
         if (attributes[0] == "vt") {
@@ -174,18 +184,17 @@ Scene ReadScene(std::string_view filename) {
         }
 
         if (attributes[0] == "vn") {
-            auto normal = geometry::Vector3D{std::stod(attributes[1]), std::stod(attributes[2]),
-                                             std::stod(attributes[3])};
-            scene.normals_.push_back(std::make_unique<geometry::Vector3D<>>(normal));
+            normal_pointers.push_back(
+                std::make_unique<geometry::Vector3D<>>(GetThreeNumbers(attributes)));
+            continue;
         }
 
         if (attributes[0] == "f") {
             size_t number_of_vertices = attributes.size() - 1;
             for (size_t i = 0; i < number_of_vertices - 2; ++i) {
-                std::vector<std::pair<int, int>> indices;
-                indices.push_back(ParsePointTriplet(attributes[1]));
-                indices.push_back(ParsePointTriplet(attributes[i + 2]));
-                indices.push_back(ParsePointTriplet(attributes[i + 3]));
+                std::vector<std::pair<int, int>> indices = {ParsePointTriplet(attributes[1]),
+                                                            ParsePointTriplet(attributes[i + 2]),
+                                                            ParsePointTriplet(attributes[i + 3])};
 
                 std::vector<geometry::Vector3D<>*> normals;
                 for (int j = 0; j < 3; ++j) {
@@ -199,9 +208,9 @@ Scene ReadScene(std::string_view filename) {
                     } else {
                         if (indices[j].second < 1) {
                             normals.push_back(
-                                scene.normals_[scene.normals_.size() + indices[j].second].get());
+                                normal_pointers[normal_pointers.size() + indices[j].second].get());
                         } else {
-                            normals.push_back(scene.normals_[indices[j].second - 1].get());
+                            normals.push_back(normal_pointers[indices[j].second - 1].get());
                         }
                     }
                 }
@@ -211,38 +220,38 @@ Scene ReadScene(std::string_view filename) {
                     geometry::Triangle{vertices[indices[0].first], vertices[indices[1].first],
                                        vertices[indices[2].first]},
                     normals};
-                scene.objects_.push_back(object);
+                objects.push_back(object);
             }
+            continue;
         }
 
         if (attributes[0] == "mtllib") {
-            scene.materials_pointers_ =
-                ReadMaterials(GetFolderPathFromFilePath(static_cast<std::string>(filename)) + "/" +
-                              attributes[1]);
+            materials_pointers = ReadMaterials(path + "/" + attributes[1]);
+            continue;
         }
 
         if (attributes[0] == "usemtl") {
-            current_material = scene.materials_pointers_.at(attributes[1]).get();
+            current_material = materials_pointers.at(attributes[1]).get();
+            continue;
         }
 
         if (attributes[0] == "S") {
-            SphereObject sphere_object = {
-                current_material, geometry::Sphere{geometry::Vector3D{std::stod(attributes[1]),
-                                                                      std::stod(attributes[2]),
-                                                                      std::stod(attributes[3])},
-                                                   std::stod(attributes[4])}};
-            scene.sphere_objects_.push_back(sphere_object);
+            sphere_objects.push_back(
+                {current_material,
+                 geometry::Sphere{GetThreeNumbers(attributes), std::stod(attributes[4])}});
+            continue;
         }
 
         if (attributes[0] == "P") {
-            scene.lights_.push_back(
-                Light{geometry::Vector3D{std::stod(attributes[1]), std::stod(attributes[2]),
-                                         std::stod(attributes[3])},
-                      geometry::Vector3D{std::stod(attributes[4]), std::stod(attributes[5]),
-                                         std::stod(attributes[6])}});
+            lights.push_back({GetThreeNumbers(attributes), GetThreeNumbers(attributes, 4)});
+            continue;
         }
     }
 
-    scene.BuildMaterialsFromPointers();
-    return scene;
+    return {objects, sphere_objects, lights, std::move(materials_pointers), std::move(normal_pointers)};
+}
+
+Scene ReadScene(std::string_view filename) {
+    std::ifstream infile(static_cast<std::string>(filename));
+    return ConstructScene(infile, GetFolderPathFromFilePath(static_cast<std::string>(filename)));
 }
