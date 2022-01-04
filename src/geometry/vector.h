@@ -36,11 +36,12 @@ public:
     }
 
 public:
-    void Normalize() {
+    Vector3D<VectorNumericType> Normalize() {
         VectorNumericType norm = Length(*this);
         for (int i = 0; i < 3; ++i) {
             data_[i] /= norm;
         }
+        return *this;
     }
 
     [[nodiscard]] bool Zero() const {
@@ -69,6 +70,10 @@ public:
         data_[0] *= value;
         data_[1] *= value;
         data_[2] *= value;
+    }
+
+    Vector3D<VectorNumericType> operator-() {
+        return Vector3D{-data_[0], -data_[1], -data_[2]};
     }
 
 public:

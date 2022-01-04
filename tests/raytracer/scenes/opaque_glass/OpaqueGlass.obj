@@ -1,0 +1,57 @@
+mtllib OpaqueGlass.mtl
+
+## Object floor
+v -4  0  4
+v  4  0  4
+v  4  0 -4
+v -4  0 -4
+
+g floor
+usemtl floor
+f -4 -3 -2 -1
+
+## Object opaqueglass
+usemtl opaqueglass
+# Front
+v  1  0  0.2
+v  1  1  0.2
+v -1  1  0.2
+v -1  0  0.2
+f -4 -3 -2 -1
+
+# Back
+v  1  0  -0.2
+v  1  1  -0.2
+v -1  1  -0.2
+v -1  0  -0.2
+f -4 -3 -2 -1
+
+# Left
+v  1  0  0.2
+v  1  1  0.2
+v  1  1  -0.2
+v  1  0  -0.2
+f -4 -3 -2 -1
+
+# Right
+v -1  1  0.2
+v -1  0  0.2
+v -1  0  -0.2
+v -1  1  -0.2
+f -4 -3 -2 -1
+
+# Top
+v  1  1  0.2
+v -1  1  0.2
+v -1  1  -0.2
+v  1  1  -0.2
+f -4 -3 -2 -1
+
+# Bottom
+v  1  0  0.2
+v -1  0  0.2
+v -1  0  -0.2
+v  1  0  -0.2
+
+P 0 2 -2 1 1 1
+P 0 2  2 1 1 1
