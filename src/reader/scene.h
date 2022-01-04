@@ -74,7 +74,7 @@ public:
     }
 
 public:
-    static std::map<std::string, Material> BuildMaterialsFromPointers(
+    [[nodiscard]] static std::map<std::string, Material> BuildMaterialsFromPointers(
         const MaterialPointers& pointers) {
         static std::map<std::string, Material> materials;
         if (materials.size() != pointers.size()) { // None of them are supposed to change

@@ -11,8 +11,8 @@ const double kEpsilon = 0.0001;
 
 std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersectionAndItsMaterial(
     const geometry::Ray<>& ray, const Object& object) {
-    std::optional<geometry::Intersection<>> trivial_normal_intersection = GetIntersection(ray, object.polygon);
-    //    return trivial_normal_intersection;
+    auto trivial_normal_intersection = GetIntersection(ray, object.polygon);
+
     if (!trivial_normal_intersection) {
         return std::make_pair(trivial_normal_intersection, object.material);
     }
@@ -27,14 +27,14 @@ std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersect
         object.normals);
     true_normal.Normalize();
 
-    return std::make_pair(Intersection(trivial_normal_intersection->GetPosition(), true_normal,
-                                       trivial_normal_intersection->GetDistance()),
-                          object.material);
+    return {geometry::Intersection{trivial_normal_intersection->GetPosition(), true_normal,
+                                   trivial_normal_intersection->GetDistance()},
+            object.material};
 }
 
-std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersectionAndItsMaterial(
+inline std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersectionAndItsMaterial(
     const geometry::Ray<>& ray, const SphereObject& sphere_object) {
-    return std::make_pair(GetIntersection(ray, sphere_object.sphere), sphere_object.material);
+    return {GetIntersection(ray, sphere_object.sphere), sphere_object.material};
 }
 
 class RayCaster {
@@ -87,20 +87,22 @@ public:
     }
 };
 
-std::pair<std::optional<geometry::Intersection<>>, const Material*> FindClosestIntersectionAndItsMaterial(
-    const Scene& scene, const geometry::Ray<>& ray) {
+std::pair<std::optional<geometry::Intersection<>>, const Material*>
+FindClosestIntersectionAndItsMaterial(const Scene& scene, const geometry::Ray<>& ray) {
     std::vector<std::pair<geometry::Intersection<>, const Material*>> intersections;
     for (const auto& object : scene.GetObjects()) {
         auto possible_intersection = GetIntersectionAndItsMaterial(ray, object);
         if (possible_intersection.first) {
-            intersections.emplace_back(possible_intersection.first.value(), possible_intersection.second);
+            intersections.emplace_back(possible_intersection.first.value(),
+                                       possible_intersection.second);
         }
     }
 
     for (const auto& sphere_object : scene.GetSphereObjects()) {
         auto possible_intersection = GetIntersectionAndItsMaterial(ray, sphere_object);
         if (possible_intersection.first) {
-            intersections.emplace_back(possible_intersection.first.value(), possible_intersection.second);
+            intersections.emplace_back(possible_intersection.first.value(),
+                                       possible_intersection.second);
         }
     }
 
@@ -139,11 +141,13 @@ void ToneMappingAndGammaCorrection(geometry::Vector3D<>* pseudo_pixels, int numb
     }
 }
 
-bool LightReachesPosition(const Scene& scene, const Light& light, const geometry::Vector3D<>& position) {
+bool LightReachesPosition(const Scene& scene, const Light& light,
+                          const geometry::Vector3D<>& position) {
     geometry::Vector3D<> ray_direction = position - light.position;
     ray_direction.Normalize();
     geometry::Ray ray(light.position, ray_direction);  // TODO Check if need normalization
-    std::optional<geometry::Intersection<>> light_hit = FindClosestIntersectionAndItsMaterial(scene, ray).first;
+    std::optional<geometry::Intersection<>> light_hit =
+        FindClosestIntersectionAndItsMaterial(scene, ray).first;
 
     if (!light_hit) {
         return false;
@@ -152,7 +156,8 @@ bool LightReachesPosition(const Scene& scene, const Light& light, const geometry
     return Length(light_hit.value().GetPosition() - position) < kEpsilon;
 }
 
-geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene, const geometry::Intersection<>& intersection) {
+geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
+                                                  const geometry::Intersection<>& intersection) {
     geometry::Vector3D<> total_diffusive_illumination = {0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         if (LightReachesPosition(scene, light, intersection.GetPosition())) {
@@ -166,14 +171,17 @@ geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene, const geom
     return total_diffusive_illumination;
 }
 
-geometry::Vector3D<> CalculateSpecularIllumination(const Scene& scene, const geometry::Intersection<>& intersection,
-                                     const Material* material, const geometry::Ray<>& ray) {
+geometry::Vector3D<> CalculateSpecularIllumination(const Scene& scene,
+                                                   const geometry::Intersection<>& intersection,
+                                                   const Material* material,
+                                                   const geometry::Ray<>& ray) {
     geometry::Vector3D<> total_specular_illumination{0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         if (LightReachesPosition(scene, light, intersection.GetPosition())) {
             geometry::Vector3D<> light_direction = light.position - intersection.GetPosition();
             light_direction.Normalize();
-            geometry::Vector3D<> reflection_direction = Reflect(light_direction, intersection.GetNormal());
+            geometry::Vector3D<> reflection_direction =
+                Reflect(light_direction, intersection.GetNormal());
             reflection_direction.Normalize();  //  Todo check if this is necessary
             double cos_sigma =
                 DotProduct(reflection_direction, ray.GetDirection());  //  TODO check sign
@@ -193,7 +201,8 @@ bool IsInsideSphere(const Scene& scene, const geometry::Ray<>& ray) {
     return false;
 }
 
-geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::Ray<>& ray, int ttl) {
+geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::Ray<>& ray,
+                                           int ttl) {
     if (ttl < 0) {
         return geometry::Vector3D<>{0, 0, 0};
     }
@@ -207,17 +216,17 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
     const Material* material = possible_intersection.second;
 
     geometry::Vector3D<> illumination_ambient = material->ambient_color + material->intensity;
-    geometry::Vector3D<> illumination_diffusive = material->diffuse_color *
-                                    CalculateDiffuseIllumination(scene, intersection) *
-                                    material->albedo[0];
+    geometry::Vector3D<> illumination_diffusive =
+        material->diffuse_color * CalculateDiffuseIllumination(scene, intersection) *
+        material->albedo[0];
     geometry::Vector3D<> illumination_specular =
         material->specular_color *
         CalculateSpecularIllumination(scene, intersection, material, ray) * material->albedo[0];
 
     bool inside = IsInsideSphere(scene, ray);
 
-    geometry::Ray reflected_ray =
-        {intersection.GetPosition(), Reflect(ray.GetDirection(), intersection.GetNormal())};
+    geometry::Ray reflected_ray = {intersection.GetPosition(),
+                                   Reflect(ray.GetDirection(), intersection.GetNormal())};
     reflected_ray.Propell(kEpsilon);  // TODO check if works
     geometry::Vector3D<> illumination_reflected;
     if (material->albedo[1] != 0 && !inside) {
