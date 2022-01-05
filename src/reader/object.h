@@ -15,7 +15,7 @@ public:
 public:
     const Material* material = nullptr;
     geometry::Triangle<> polygon;
-    std::vector<geometry::Vector3D<>*> normals;
+    std::array<geometry::Vector3D<>*, 3> normals = {nullptr, nullptr, nullptr};
 };
 
 struct SphereObject {

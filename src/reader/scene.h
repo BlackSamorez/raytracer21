@@ -200,7 +200,7 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
                                                             ParsePointTriplet(attributes[i + 2]),
                                                             ParsePointTriplet(attributes[i + 3])};
 
-                std::vector<geometry::Vector3D<>*> normals;
+                std::vector<geometry::Vector3D<>*> normals(3, nullptr);
                 for (int j = 0; j < 3; ++j) {
                     if (indices[j].first < 1) {
                         indices[j].first = static_cast<int>(vertices.size()) + indices[j].first;
@@ -208,13 +208,13 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
                         indices[j].first--;
                     }
                     if (indices[j].second == 0) {  // no normal
-                        normals.push_back(nullptr);
+                        normals[j] = nullptr;
                     } else {
                         if (indices[j].second < 1) {
-                            normals.push_back(
-                                normal_pointers[normal_pointers.size() + indices[j].second].get());
+                            normals[j] =
+                                normal_pointers[normal_pointers.size() + indices[j].second].get();
                         } else {
-                            normals.push_back(normal_pointers[indices[j].second - 1].get());
+                            normals[j] = normal_pointers[indices[j].second - 1].get();
                         }
                     }
                 }
@@ -223,7 +223,7 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
                     current_material,
                     geometry::Triangle{vertices[indices[0].first], vertices[indices[1].first],
                                        vertices[indices[2].first]},
-                    normals};
+                    {normals[0], normals[1], normals[2]}};
                 objects.push_back(object);
             }
             continue;

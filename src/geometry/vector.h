@@ -154,6 +154,17 @@ requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> Line
 }
 
 template <typename VectorNumericType>
+requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> LinearCombination(
+    const Vector3D<VectorNumericType>& coefficients,
+    const std::array<geometry::Vector3D<>*, 3>& vectors) {
+    Vector3D result = {0, 0, 0};
+    for (size_t i = 0; i < 3; ++i) {
+        result += coefficients[i] * *vectors[i];
+    }
+    return result;
+}
+
+template <typename VectorNumericType>
 requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
 operator*(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericType>& rhs) {
     return Vector3D{lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]};
