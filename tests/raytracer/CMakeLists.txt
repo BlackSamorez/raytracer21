@@ -1,4 +1,3 @@
-enable_testing()
 add_executable(test_raytracer test_raytracer.cpp)
 target_link_libraries(test_raytracer PRIVATE Catch2::Catch2)
 target_link_libraries(test_raytracer PRIVATE ${PNG_LIBRARY} ${JPEG_LIBRARIES})

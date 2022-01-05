@@ -1,4 +1,3 @@
-enable_testing()
 add_executable(test_reader test_reader.cpp)
 target_link_libraries(test_reader PRIVATE Catch2::Catch2)
 target_link_libraries(test_reader PRIVATE ${PNG_LIBRARY} ${JPEG_LIBRARIES})
