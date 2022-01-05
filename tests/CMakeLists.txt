@@ -26,14 +26,13 @@ catch_discover_tests(compile_catch2)
 
 add_subdirectory(geometry)
 
-add_subdirectory(reader)
-
 find_package(PNG)
 find_package(JPEG)
 
 if (${PNG_FOUND} AND ${JPEG_FOUND})
     message(STATUS "PNG and JPEG found! Enabling related tests")
 
+    add_subdirectory(reader)
     add_subdirectory(debug_mode)
     add_subdirectory(raytracer)
 else()

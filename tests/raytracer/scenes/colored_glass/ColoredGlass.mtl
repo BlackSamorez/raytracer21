@@ -1,0 +1,15 @@
+newmtl floor
+  Ns 15
+  Ni 10
+  Ka 0 0 0
+  Kd 0.3 0.3 0.3
+  Ks 0.2 0.2 0.2
+  al 0.7 0.3 0
+
+newmtl coloredglass
+  Ns 20
+  Ni 1
+  Ka 0.1 0 0
+  Kd 1 0 0
+  Ks 1 0 0
+  al 0.1 0.0 0.9

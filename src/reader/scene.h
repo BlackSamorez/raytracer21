@@ -1,9 +1,11 @@
 #pragma once
 
-#include <material.h>
-#include <vector.h>
-#include <object.h>
-#include <light.h>
+#include "material.h"
+#include "vector.h"
+#include "object.h"
+#include "light.h"
+#include "image.h"
+#include "skybox.h"
 
 #include <vector>
 #include <map>
@@ -77,7 +79,7 @@ public:
     [[nodiscard]] static std::map<std::string, Material> BuildMaterialsFromPointers(
         const MaterialPointers& pointers) {
         static std::map<std::string, Material> materials;
-        if (materials.size() != pointers.size()) { // None of them are supposed to change
+        if (materials.size() != pointers.size()) {  // None of them are supposed to change
             for (const auto& [name, pointer] : pointers) {
                 materials[name] = *pointer;
             }
@@ -89,6 +91,7 @@ public:
     const std::vector<Object> objects_;
     const std::vector<SphereObject> sphere_objects_;
     const std::vector<Light> lights_;
+    const Sky sky_;
 
 public:  // heap held
     const MaterialPointers materials_pointers_;
@@ -161,6 +164,7 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
     std::vector<Object> objects;
     std::vector<SphereObject> sphere_objects;
     std::vector<Light> lights;
+    Sky sky;
     MaterialPointers materials_pointers;
     std::vector<std::unique_ptr<geometry::Vector3D<>>> normal_pointers;
 
@@ -246,9 +250,18 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
             lights.push_back({GetThreeNumbers(attributes), GetThreeNumbers(attributes, 4)});
             continue;
         }
+
+        if (attributes[0] == "Sky") {
+            sky.image_ = std::make_shared<Image>(path + "/" + attributes[3]);
+        }
     }
 
-    return {objects, sphere_objects, lights, std::move(materials_pointers), std::move(normal_pointers)};
+    return {objects,
+            sphere_objects,
+            lights,
+            std::move(sky),
+            std::move(materials_pointers),
+            std::move(normal_pointers)};
 }
 
 Scene ReadScene(std::string_view filename) {

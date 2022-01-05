@@ -1,0 +1,87 @@
+newmtl floor
+  Ns 20
+  Ni 10
+  Ka 0 0 0
+  Kd 0.1 0.1 0.1
+  Ks 0.8 0.8 0.8
+  al 0.5 0.5 0
+
+newmtl wall
+  Ns 15
+  Ni 10
+  Ka 0 0 0
+  Kd 0.4 0.4 0.4
+  Ks 0.1 0.1 0.1
+  al 0.9 0.1 0
+
+newmtl redglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 1 0 0
+  Ks 1 0 0
+  al 0.2 0.9 0.9
+
+newmtl greenglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0 1 0
+  Ks 0 1 0
+  al 0.2 0.9 0.9
+
+newmtl blueglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0 0 1
+  Ks 0 0 1
+  al 0.2 0.9 0.9
+
+newmtl cyanglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0 0.5 0.5
+  Ks 0 0.5 0.5
+  al 0.2 0.9 0.9
+
+newmtl magentaglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0.5 0 0.5
+  Ks 0.5 0 0.5
+  al 0.1 0.9 0.9
+
+newmtl yellowglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0.5 0.5 0
+  Ks 0.5 0.5 0
+  al 0.2 0.9 0.9
+
+newmtl darkglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0.33 0.33 0.33
+  Ks 0.33 0.33 0.33
+  al 0.5 0.9 0.5
+
+newmtl transparentglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0.33 0.33 0.33
+  Ks 0.33 0.33 0.33
+  al 0.2 0.9 0.9
+
+newmtl blackglass
+  Ns 20
+  Ni 1
+  Ka 0 0 0
+  Kd 0.33 0.33 0.33
+  Ks 0.33 0.33 0.33
+  al 0 0.9 0

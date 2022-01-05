@@ -5,6 +5,8 @@
 #include <render_options.h>
 #include <scene.h>
 #include <geometry.h>
+#include <skybox.h>
+
 #include <string>
 
 const double kEpsilon = 0.0001;
@@ -25,7 +27,7 @@ std::pair<std::optional<geometry::Intersection<>>, const Material*> GetIntersect
     auto true_normal = LinearCombination(
         GetBarycentricCoords(object.polygon, trivial_normal_intersection.value().GetPosition()),
         object.normals);
-    true_normal.Normalize();
+//    true_normal.Normalize();
 
     return {geometry::Intersection{trivial_normal_intersection->GetPosition(), true_normal,
                                    trivial_normal_intersection->GetDistance()},
@@ -63,7 +65,7 @@ public:
         right_unit_ *= pixel_size;
 
         if (backward_unit_[1] < 0) {
-            up_unit_ *= -1;  // I have no fucking idea why
+//            up_unit_ *= -1;  // I have no fucking idea why
         }
     }
 
@@ -164,7 +166,7 @@ geometry::Vector3D<> LightReach(const Scene& scene, const Light& light,
 
     if (ReachThroughPossible(material)) {
         Light new_light = {closest_intersection.value().GetPosition(),
-                           material->albedo[2] * light.intensity};
+                           material->albedo[2] * material->specular_color * light.intensity};
         new_light.position += ray_direction * kEpsilon;
         return LightReach(scene, new_light, position);
     } else {
@@ -214,7 +216,7 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
 
     auto [possible_intersection, material] = FindClosestIntersectionAndItsMaterial(scene, ray);
     if (!possible_intersection) {
-        return geometry::Vector3D<>{0, 0, 0};
+        return scene.sky_.Trace(ray);
     }
     auto intersection = possible_intersection.value();
 
@@ -237,8 +239,9 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
     reflected_ray.Propell(kEpsilon);  // TODO check if works
     geometry::Vector3D<> illumination_reflected;
     if (material->albedo[1] != 0 && !inside) {
-        illumination_reflected =
-            CalculateIllumination(scene, reflected_ray, false, ttl - 1) * material->albedo[1];
+        illumination_reflected = material->specular_color *
+                                 CalculateIllumination(scene, reflected_ray, false, ttl - 1) *
+                                 material->albedo[1];
     } else {
         illumination_reflected = {0, 0, 0};
     }
@@ -259,8 +262,9 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
         geometry::Ray refracted_ray = {intersection.GetPosition(), refracted_ray_direction.value()};
         refracted_ray.Propell(kEpsilon);
 
-        illumination_refracted =
-            CalculateIllumination(scene, refracted_ray, true, ttl - 1) * material->albedo[2];
+        illumination_refracted = material->specular_color *
+                                 CalculateIllumination(scene, refracted_ray, true, ttl - 1) *
+                                 material->albedo[2];
     } else {
         illumination_refracted = {0, 0, 0};
     }
@@ -323,7 +327,8 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
                     (depths[image.Width() * vertical_pixel_index + horizontal_pixel_index] -
                      kEpsilon) *
                     256);
-                image.SetPixel({brightness, brightness, brightness}, vertical_pixel_index, horizontal_pixel_index);
+                image.SetPixel({brightness, brightness, brightness}, vertical_pixel_index,
+                               horizontal_pixel_index);
             }
         }
     }
