@@ -150,7 +150,10 @@ bool ReachThroughPossible(const Material* material) {
 }
 
 geometry::Vector3D<> LightReach(const Scene& scene, const Light& light,
-                                const geometry::Vector3D<>& position) {
+                                const geometry::Vector3D<>& position, int ttl) {
+    if (ttl < 0) {
+        return {0, 0, 0};
+    }
     geometry::Vector3D<> ray_direction = position - light.position;
     ray_direction.Normalize();
     geometry::Ray ray(light.position, ray_direction);
@@ -168,17 +171,17 @@ geometry::Vector3D<> LightReach(const Scene& scene, const Light& light,
         Light new_light = {closest_intersection.value().GetPosition(),
                            material->albedo[2] * material->specular_color * light.intensity};
         new_light.position += ray_direction * kEpsilon;
-        return LightReach(scene, new_light, position);
+        return LightReach(scene, new_light, position, ttl - 1);
     } else {
         return {0, 0, 0};
     }
 }
 
 geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
-                                                  const geometry::Intersection<>& intersection) {
+                                                  const geometry::Intersection<>& intersection, int ttl) {
     geometry::Vector3D<> total_diffusive_illumination = {0, 0, 0};
     for (const auto& light : scene.GetLights()) {
-        auto illumination = LightReach(scene, light, intersection.GetPosition());
+        auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
         if (!illumination.Zero()) {
             auto light_direction = (light.position - intersection.GetPosition()).Normalize();
             total_diffusive_illumination +=
@@ -191,10 +194,10 @@ geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
 geometry::Vector3D<> CalculateSpecularIllumination(const Scene& scene,
                                                    const geometry::Intersection<>& intersection,
                                                    const Material* material,
-                                                   const geometry::Ray<>& ray) {
+                                                   const geometry::Ray<>& ray, int ttl) {
     geometry::Vector3D<> total_specular_illumination{0, 0, 0};
     for (const auto& light : scene.GetLights()) {
-        auto illumination = LightReach(scene, light, intersection.GetPosition());
+        auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
         if (!illumination.Zero()) {
             auto light_direction = (light.position - intersection.GetPosition()).Normalize();
             auto reflection_direction =
@@ -225,12 +228,12 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
 
     // Diffusive
     auto illumination_diffusive = material->diffuse_color *
-                                  CalculateDiffuseIllumination(scene, intersection) *
+                                  CalculateDiffuseIllumination(scene, intersection, ttl - 1) *
                                   material->albedo[0];
 
     // Specular
     auto illumination_specular = material->specular_color *
-                                 CalculateSpecularIllumination(scene, intersection, material, ray) *
+                                 CalculateSpecularIllumination(scene, intersection, material, ray, ttl - 1) *
                                  material->albedo[0];
 
     // Reflected
@@ -384,7 +387,7 @@ Image Render(const std::string& filename, const CameraOptions& camera_options,
              ++horizontal_pixel_index) {
             for (int vertical_pixel_index = 0; vertical_pixel_index < image.Height();
                  ++vertical_pixel_index) {
-                if (horizontal_pixel_index == 250 && vertical_pixel_index == 250) {
+                if (horizontal_pixel_index == 325 && vertical_pixel_index == 250) {
                     continue;
                 }
                 auto cast_ray = basic_screen_thrower(horizontal_pixel_index, vertical_pixel_index);
