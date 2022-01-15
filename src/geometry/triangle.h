@@ -6,7 +6,7 @@
 namespace geometry {
 
 template <typename VectorNumericType = DefaultNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 class Triangle {
 public:
     Triangle(std::initializer_list<Vector3D<VectorNumericType>> list) {

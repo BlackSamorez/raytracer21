@@ -110,16 +110,13 @@ std::vector<std::pair<geometry::Intersection<>, const Material*>> FindAllInterse
 }
 
 std::pair<std::optional<geometry::Intersection<>>, const Material*>
-FindClosestIntersectionAndMaterial(std::vector<std::pair<geometry::Intersection<>, const Material*>> intersections) {
+FindClosestIntersectionAndMaterial(
+    std::vector<std::pair<geometry::Intersection<>, const Material*>> intersections) {
     if (!intersections.empty()) {
-        // Select the closest one
-        auto closest_pair_it =
-            std::min_element(intersections.begin(), intersections.end(),
-                             [](auto& lhs,
-                                auto& rhs) {
-                                 return lhs.first.GetDistance() < rhs.first.GetDistance();
-                             });
-        return *closest_pair_it;
+        return *std::min_element(
+            intersections.begin(), intersections.end(),
+            [](auto& lhs, auto& rhs) { return lhs.first.GetDistance() < rhs.first.GetDistance(); });
+
     } else {
         return {{}, nullptr};
     }
@@ -127,7 +124,7 @@ FindClosestIntersectionAndMaterial(std::vector<std::pair<geometry::Intersection<
 
 std::pair<std::optional<geometry::Intersection<>>, const Material*>
 FindClosestIntersectionAndMaterial(const Scene& scene, const geometry::Ray<>& ray) {
-    return  FindClosestIntersectionAndMaterial(FindAllIntersectionsAndMaterials(scene, ray));
+    return FindClosestIntersectionAndMaterial(FindAllIntersectionsAndMaterials(scene, ray));
 }
 
 void ToneMappingAndGammaCorrection(geometry::Vector3D<>* pseudo_pixels, int number_of_pixels) {
@@ -150,7 +147,7 @@ void ToneMappingAndGammaCorrection(geometry::Vector3D<>* pseudo_pixels, int numb
     }
 }
 
-bool ReachThroughPossible(const Material* material) {
+inline bool ReachThroughPossible(const Material* material) {
     return material->refraction_index == 1 && material->albedo[2] != 0;
 }
 
@@ -182,9 +179,8 @@ geometry::Vector3D<> LightReach(const Scene& scene, const Light& light,
     }
 }
 
-geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
-                                                  const geometry::Intersection<>& intersection,
-                                                  int ttl) {
+geometry::Vector3D<> CalculateDiffuse(const Scene& scene,
+                                      const geometry::Intersection<>& intersection, int ttl) {
     geometry::Vector3D<> total_diffusive_illumination = {0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
@@ -197,10 +193,10 @@ geometry::Vector3D<> CalculateDiffuseIllumination(const Scene& scene,
     return total_diffusive_illumination;
 }
 
-geometry::Vector3D<> CalculateSpecularIllumination(const Scene& scene,
-                                                   const geometry::Intersection<>& intersection,
-                                                   const Material* material,
-                                                   const geometry::Ray<>& ray, int ttl) {
+geometry::Vector3D<> CalculateSpecular(const Scene& scene,
+                                       const geometry::Intersection<>& intersection,
+                                       const Material* material, const geometry::Ray<>& ray,
+                                       int ttl) {
     geometry::Vector3D<> total_specular_illumination{0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
@@ -234,14 +230,13 @@ geometry::Vector3D<> CalculateIllumination(const Scene& scene, const geometry::R
 
     // Diffusive
     auto illumination_diffusive = material->diffuse_color *
-                                  CalculateDiffuseIllumination(scene, intersection, ttl - 1) *
+                                  CalculateDiffuse(scene, intersection, ttl - 1) *
                                   material->albedo[0];
 
     // Specular
-    auto illumination_specular =
-        material->specular_color *
-        CalculateSpecularIllumination(scene, intersection, material, ray, ttl - 1) *
-        material->albedo[0];
+    auto illumination_specular = material->specular_color *
+                                 CalculateSpecular(scene, intersection, material, ray, ttl - 1) *
+                                 material->albedo[0];
 
     // Reflected
     geometry::Ray reflected_ray = {intersection.GetPosition(),

@@ -94,3 +94,20 @@ TEST_CASE("Skybox", "[raytracer]") {
     Compare(render, target);
 //    render.Write(dir_path + "scenes/skybox/full.png");
 }
+
+TEST_CASE("Violin case", "[raytracer]") {
+    const std::string dir_path(PROGRAM_DIR);
+
+    CameraOptions camera_options(500, 500);
+    camera_options.look_from = {1.5, 1.5, 1.5};
+    camera_options.look_to = {0.5, 0, 0};
+    RenderOptions render_options{4, RenderMode::kFull};
+
+    auto render =
+        Render(dir_path + "scenes/violin_case/ViolinCase.obj", camera_options, render_options);
+    auto target = Image(500, 500);
+    target.ReadPng(dir_path + "scenes/violin_case/full.png");
+
+    Compare(render, target);
+//    render.Write(dir_path + "scenes/violin_case/example.png");
+}

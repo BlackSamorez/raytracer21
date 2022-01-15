@@ -5,7 +5,7 @@
 
 namespace geometry {
 template <typename VectorNumericType = DefaultNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 class Ray {
 public:
     Ray(Vector3D<VectorNumericType> origin, Vector3D<VectorNumericType> direction)

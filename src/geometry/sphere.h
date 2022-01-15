@@ -5,7 +5,7 @@
 
 namespace geometry {
 template <typename VectorNumericType = DefaultNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 class Sphere {
 public:
     Sphere(Vector3D<VectorNumericType> center, double radius) : center_(center), radius_(radius) {
@@ -16,11 +16,11 @@ public:
         return center_;
     }
 
-    double GetRadius() const {
+    [[nodiscard]] double GetRadius() const {
         return radius_;
     }
 
-    bool ContainsOrigin(const Vector3D<VectorNumericType>& vector) const {
+    bool VectorInside(const Vector3D<VectorNumericType>& vector) const {
         return Length(vector - center_) < radius_;
     }
 

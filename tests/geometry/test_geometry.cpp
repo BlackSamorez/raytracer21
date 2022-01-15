@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "geometry.h"
+#include "auxiliary.hpp"
 
 const double kX = 123.;
 const double kY = 456.;
@@ -16,13 +17,13 @@ const double kZ = 789.;
 const double kErr = 1e-6;
 
 TEST_CASE("Initialize geometry::Vector3D", "[raytracer]") {
-    {
+    SECTION("Initialize") {
         const geometry::Vector3D k_vec{kX, kY, kZ};
         REQUIRE(std::fabs(k_vec[0] - kX) < kErr);
         REQUIRE(std::fabs(k_vec[1] - kY) < kErr);
         REQUIRE(std::fabs(k_vec[2] - kZ) < kErr);
     }
-    {
+    SECTION("Assign") {
         geometry::Vector3D vec;
         vec[0] = kX;
         vec[1] = kY;
@@ -33,25 +34,40 @@ TEST_CASE("Initialize geometry::Vector3D", "[raytracer]") {
     }
 }
 
+TEST_CASE("Template", "[raytracer]") {
+    SECTION("Default") {
+        geometry::Vector3D<> default_templated;
+        REQUIRE(typeid(default_templated.data_[0]) == typeid(geometry::DefaultNumericType));
+    }
+    SECTION("Float") {
+        geometry::Vector3D<float> default_templated;
+        REQUIRE(typeid(default_templated.data_[0]) == typeid(float));
+    }
+}
+
 TEST_CASE("Normalize, Length", "[raytracer]") {
-    geometry::Vector3D fst{kX, 0., 0.};
-    REQUIRE(std::fabs(Length(fst) - kX) < kErr);
-    fst.Normalize();
-    REQUIRE(std::fabs(fst[0] - 1.) < kErr);
+    SECTION("Coordinate-wise") {
+        geometry::Vector3D fst{kX, 0., 0.};
+        REQUIRE(std::fabs(Length(fst) - kX) < kErr);
+        fst.Normalize();
+        REQUIRE(std::fabs(fst[0] - 1.) < kErr);
 
-    geometry::Vector3D snd{0., kY, 0.};
-    REQUIRE(std::fabs(Length(snd) - kY) < kErr);
-    snd.Normalize();
-    REQUIRE(std::fabs(snd[1] - 1.) < kErr);
+        geometry::Vector3D snd{0., kY, 0.};
+        REQUIRE(std::fabs(Length(snd) - kY) < kErr);
+        snd.Normalize();
+        REQUIRE(std::fabs(snd[1] - 1.) < kErr);
 
-    geometry::Vector3D trd{0., 0., kZ};
-    REQUIRE(std::fabs(Length(trd) - kZ) < kErr);
-    trd.Normalize();
-    REQUIRE(std::fabs(trd[2] - 1.) < kErr);
+        geometry::Vector3D trd{0., 0., kZ};
+        REQUIRE(std::fabs(Length(trd) - kZ) < kErr);
+        trd.Normalize();
+        REQUIRE(std::fabs(trd[2] - 1.) < kErr);
+    }
 
-    geometry::Vector3D vec{kX, kY, kZ};
-    vec.Normalize();
-    REQUIRE(std::fabs(Length(vec) - 1.) < kErr);
+    SECTION("Normalize") {
+        geometry::Vector3D vec{kX, kY, kZ};
+        vec.Normalize();
+        REQUIRE(std::fabs(Length(vec) - 1.) < kErr);
+    }
 }
 
 TEST_CASE("Dot product", "[raytracer]") {
@@ -65,7 +81,7 @@ TEST_CASE("Dot product", "[raytracer]") {
         const geometry::Vector3D rhs{0., 1., kY};
         REQUIRE(std::fabs(DotProduct(lhs, rhs)) < kErr);
     }
-    {
+    SECTION("Coordinate-wise") {
         geometry::Vector3D vec{kX, kY, kZ};
         REQUIRE(std::fabs(DotProduct(vec, {1., 0., 0.}) - kX) < kErr);
         REQUIRE(std::fabs(DotProduct(vec, {0., 1., 0.}) - kY) < kErr);
@@ -74,17 +90,17 @@ TEST_CASE("Dot product", "[raytracer]") {
 }
 
 TEST_CASE("Cross product", "[raytracer]") {
-    {
+    SECTION("First-Second") {
         const geometry::Vector3D lhs{kX, 0., 0.};
         const geometry::Vector3D rhs{0., kY, 0.};
         REQUIRE(std::fabs(CrossProduct(lhs, rhs)[2] - kX * kY) < kErr);
     }
-    {
+    SECTION("Second-Third") {
         const geometry::Vector3D lhs{0., kY, 0.};
         const geometry::Vector3D rhs{0., 0., kZ};
         REQUIRE(std::fabs(CrossProduct(lhs, rhs)[0] - kY * kZ) < kErr);
     }
-    {
+    SECTION("Third-First") {
         const geometry::Vector3D lhs{0., 0., kZ};
         const geometry::Vector3D rhs{kX, 0., 0.};
         REQUIRE(std::fabs(CrossProduct(lhs, rhs)[1] - kZ * kX) < kErr);
@@ -132,12 +148,14 @@ TEST_CASE("Intersection", "[raytracer]") {
     REQUIRE(std::fabs(intersection->GetNormal()[2] - 1) < kErr);
     REQUIRE(std::fabs(intersection->GetDistance() - 5) < kErr);
 
-    ray = {{0, 0, 0}, {-1, 0, 0}};
-    intersection = GetIntersection(ray, sphere);
-    REQUIRE(intersection);
-    REQUIRE(std::fabs(intersection->GetPosition()[0] + 2) < kErr);
-    REQUIRE(std::fabs(intersection->GetNormal()[0] - 1) < kErr);
-    REQUIRE(std::fabs(intersection->GetDistance() - 2) < kErr);
+    SECTION("From inside the sphere") {
+        ray = {{0, 0, 0}, {-1, 0, 0}};
+        intersection = GetIntersection(ray, sphere);
+        REQUIRE(intersection);
+        REQUIRE(std::fabs(intersection->GetPosition()[0] + 2) < kErr);
+        REQUIRE(std::fabs(intersection->GetNormal()[0] - 1) < kErr);
+        REQUIRE(std::fabs(intersection->GetDistance() - 2) < kErr);
+    }
 
     geometry::Triangle triangle{{0, 0, 0}, {4, 0, 0}, {0, 4, 0}};
     ray = {{2, 2, 1}, {0, 0, -1}};
@@ -153,14 +171,26 @@ TEST_CASE("Intersection", "[raytracer]") {
 }
 
 TEST_CASE("Refract, Reflect", "[raytracer]") {
-    geometry::Vector3D normal{0, 1, 0};
-    geometry::Vector3D ray{0.707107, -0.707107, 0};
-    auto reflect = Reflect(ray, normal);
-    REQUIRE(std::fabs(reflect[0] - 0.707107) < kErr);
-    REQUIRE(std::fabs(reflect[1] - 0.707107) < kErr);
-    auto refract_opt = Refract(ray, normal, 0.9);
-    REQUIRE(std::fabs(refract_opt.value()[0] - 0.636396) < kErr);
-    REQUIRE(std::fabs(refract_opt.value()[1] - (-0.771362)) < kErr);
+    SECTION("Reflect") {
+        geometry::Vector3D normal{0, 1, 0};
+        geometry::Vector3D ray{0.707107, -0.707107, 0};
+        auto reflect = Reflect(ray, normal);
+        REQUIRE(std::fabs(reflect[0] - 0.707107) < kErr);
+        REQUIRE(std::fabs(reflect[1] - 0.707107) < kErr);
+    }
+    SECTION("Refract") {
+        geometry::Vector3D normal{0, 1, 0};
+        geometry::Vector3D ray{0.707107, -0.707107, 0};
+        auto refract_opt = Refract(ray, normal, 0.9);
+        REQUIRE(std::fabs(refract_opt.value()[0] - 0.636396) < kErr);
+        REQUIRE(std::fabs(refract_opt.value()[1] - (-0.771362)) < kErr);
+    }
+    SECTION("No refract") {
+        geometry::Vector3D normal{0, 1, 0};
+        geometry::Vector3D ray{0.707107, -0.707107, 0};
+        auto refract_opt = Refract(ray, normal, 2.);
+        REQUIRE_FALSE(refract_opt);
+    }
 }
 
 TEST_CASE("Barycentric coords", "[raytracer]") {

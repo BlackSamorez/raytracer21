@@ -7,12 +7,11 @@
 #include <iostream>
 #include <initializer_list>
 #include <algorithm>
-#include <concepts>
 
 namespace geometry {
 
-template <typename VectorNumericType = geometry::DefaultNumericType>
-requires std::floating_point<VectorNumericType>
+template <typename VectorNumericType = DefaultNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 struct Vector3D {
 public:
     Vector3D() : data_({0, 0, 0}) {
@@ -37,7 +36,7 @@ public:
 
 public:
     Vector3D<VectorNumericType> Normalize() {
-        VectorNumericType norm = Length(*this);
+        auto norm = Length(*this);
         for (int i = 0; i < 3; ++i) {
             data_[i] /= norm;
         }
@@ -81,14 +80,14 @@ public:
 };
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 inline VectorNumericType DotProduct(const Vector3D<VectorNumericType>& lhs,
                                     const Vector3D<VectorNumericType>& rhs) {
     return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 inline Vector3D<VectorNumericType> CrossProduct(const Vector3D<VectorNumericType>& a,
                                                 const Vector3D<VectorNumericType>& b) {
     return Vector3D{a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
@@ -96,13 +95,13 @@ inline Vector3D<VectorNumericType> CrossProduct(const Vector3D<VectorNumericType
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 inline VectorNumericType Length(const Vector3D<VectorNumericType>& vec) {
     return std::sqrt(DotProduct(vec, vec));
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType>
 operator+(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericType>& rhs) {
     Vector3D result = lhs;
     result += rhs;
@@ -110,7 +109,7 @@ operator+(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericTy
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType>
 operator-(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericType>& rhs) {
     Vector3D result = lhs;
     result -= rhs;
@@ -118,7 +117,7 @@ operator-(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericTy
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType>
 operator*(const Vector3D<VectorNumericType>& vector, DefaultNumericType number) {
     Vector3D result = vector;
     result *= number;
@@ -126,16 +125,16 @@ operator*(const Vector3D<VectorNumericType>& vector, DefaultNumericType number) 
 }
 
 template <typename VectorNumericType>
-Vector3D<VectorNumericType> operator/(
-    const Vector3D<VectorNumericType>& vector,
-    DefaultNumericType number) requires std::floating_point<VectorNumericType> {
+Vector3D<VectorNumericType> operator/(const Vector3D<VectorNumericType>& vector,
+                                      DefaultNumericType number) requires
+    NumericTypeConstraint<VectorNumericType> {
     Vector3D result = vector;
     result /= number;
     return result;
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType>
 operator*(DefaultNumericType number, const Vector3D<VectorNumericType>& vector) {
     Vector3D result = vector;
     result *= number;
@@ -143,7 +142,7 @@ operator*(DefaultNumericType number, const Vector3D<VectorNumericType>& vector) 
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> LinearCombination(
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType> LinearCombination(
     const Vector3D<VectorNumericType>& coefficients,
     const std::vector<Vector3D<VectorNumericType>*>& vectors) {
     Vector3D result = {0, 0, 0};
@@ -154,9 +153,8 @@ requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> Line
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> LinearCombination(
-    const Vector3D<VectorNumericType>& coefficients,
-    const std::array<geometry::Vector3D<>*, 3>& vectors) {
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType> LinearCombination(
+    const Vector3D<VectorNumericType>& coefficients, const std::array<Vector3D<>*, 3>& vectors) {
     Vector3D result = {0, 0, 0};
     for (size_t i = 0; i < 3; ++i) {
         result += coefficients[i] * *vectors[i];
@@ -165,7 +163,7 @@ requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType> Line
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType> Vector3D<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType>
 operator*(const Vector3D<VectorNumericType>& lhs, const Vector3D<VectorNumericType>& rhs) {
     return Vector3D{lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]};
 }

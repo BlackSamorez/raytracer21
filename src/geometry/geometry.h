@@ -11,7 +11,7 @@
 
 namespace geometry {
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 std::optional<Intersection<VectorNumericType>> GetIntersection(
     const Ray<VectorNumericType>& ray, const Sphere<VectorNumericType>& sphere) {
     auto center = sphere.GetCenter() - ray.GetOrigin();
@@ -51,18 +51,16 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(
 
     Vector3D<VectorNumericType> normal;
     if (Length(center) > sphere.GetRadius()) {
-        normal = relative_position - center;
+        normal = (relative_position - center).Normalize();
     } else {
-        normal = center - relative_position;
+        normal = (center - relative_position).Normalize();
     }
-
-    normal.Normalize();
 
     return Intersection(relative_position + ray.GetOrigin(), normal, Length(relative_position));
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 std::optional<Intersection<VectorNumericType>> GetIntersection(
     const Ray<VectorNumericType>& ray, const Triangle<VectorNumericType>& triangle) {
     const VectorNumericType calculation_epsilon = 0.0000001;
@@ -76,7 +74,7 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(
     h = CrossProduct(ray.GetDirection(), edge2);
     a = DotProduct(edge1, h);
     if (a > -calculation_epsilon && a < calculation_epsilon) {
-        return {};  // This ray is parallel to this triangle.
+        return {};  // The ray is parallel to the triangle.
     }
     f = 1.0 / a;
     s = ray.GetOrigin() - vertex0;
@@ -94,22 +92,18 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(
     if (t > calculation_epsilon)  // ray intersection
     {
         auto intersection_point = ray.GetOrigin() + ray.GetDirection() * t;
-        auto distance = Length(intersection_point - ray.GetOrigin());
-
-        auto normal = CrossProduct(edge1, edge2);
-        normal.Normalize();
+        auto normal = CrossProduct(edge1, edge2).Normalize();
         if (DotProduct(normal, ray.GetDirection()) > 0) {
             normal -= 2 * normal;
         }
-
-        return Intersection(intersection_point, normal, distance);
+        return Intersection<VectorNumericType>{intersection_point, normal, Length(intersection_point - ray.GetOrigin())};
     } else {
         return {};  // This means that there is a line intersection but not a ray intersection.
     }
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
+requires NumericTypeConstraint<VectorNumericType>
 Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericType>& triangle,
                                                  const Vector3D<VectorNumericType>& point) {
     auto s_bcx = Triangle({triangle.GetVertex(1), triangle.GetVertex(2), point}).Area() / 2;
@@ -120,7 +114,7 @@ Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericTyp
 }
 
 template <typename VectorNumericType, typename EtaNumericType>
-requires std::floating_point<VectorNumericType> && std::floating_point<EtaNumericType>
+requires NumericTypeConstraint<VectorNumericType> && NumericTypeConstraint<EtaNumericType>
 std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericType>& ray,
                                                    const Vector3D<VectorNumericType>& normal,
                                                    EtaNumericType eta) {
@@ -135,8 +129,8 @@ std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericT
 }
 
 template <typename VectorNumericType>
-requires std::floating_point<VectorNumericType>
-Vector3D<VectorNumericType> Reflect(Vector3D<VectorNumericType> ray,
+requires NumericTypeConstraint<VectorNumericType>
+Vector3D<VectorNumericType> Reflect(const Vector3D<VectorNumericType>& ray,
                                     const Vector3D<VectorNumericType>& normal) {
     return ray - normal * DotProduct(normal, ray) * 2;
 }
