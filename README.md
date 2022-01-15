@@ -2,7 +2,7 @@
 
 A *c++* raytracer programm
 
-![alt text](https://github.com/BlackSamorez/raytracer21/blob/main/examples/ysda/full.png?raw=true)
+![alt text](https://github.com/BlackSamorez/raytracer21/blob/main/examples/trumpet/example.png?raw=true)
 
 ## Code Features
 
