@@ -1,6 +1,6 @@
 # raytracer21
 
-A *c++* raytracer programm
+An almost pure *c++* raytracer programm
 
 ![alt text](https://github.com/BlackSamorez/raytracer21/blob/main/examples/trumpet/full.png?raw=true)
 
