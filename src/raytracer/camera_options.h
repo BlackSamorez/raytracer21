@@ -4,6 +4,7 @@
 #include <cmath>
 #include "vector.h"
 
+namespace raytracer {
 struct CameraOptions {
     int screen_width;
     int screen_height;
@@ -23,3 +24,4 @@ struct CameraOptions {
     {
     }
 };
+}  // namespace raytracer

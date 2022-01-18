@@ -13,8 +13,6 @@ option(TEST_SOLUTION "Build solution" OFF)
 option(ENABLE_PRIVATE_TESTS "Enable private tests" OFF)
 option(GRADER "Building on CI" OFF)
 
-set(CMAKE_CXX_COMPILER "/usr/bin/g++-10")
-
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(CTest)
 include(Catch)

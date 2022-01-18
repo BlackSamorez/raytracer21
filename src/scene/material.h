@@ -3,6 +3,7 @@
 #include <vector.h>
 #include <string>
 
+namespace scene {
 struct Material {
 public:
     std::string name;
@@ -14,3 +15,4 @@ public:
     double refraction_index = 0;
     geometry::Vector3D<> albedo = {1, 0, 0};
 };
+}  // namespace scene

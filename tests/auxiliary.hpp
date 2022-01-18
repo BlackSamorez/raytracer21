@@ -6,12 +6,12 @@
 #include <string>
 #include <optional>
 
-inline double PixelDistance(const RGB& lhs, const RGB& rhs) {
+inline double PixelDistance(const raytracer::RGB& lhs, const raytracer::RGB& rhs) {
     return sqrt(std::pow(lhs.r - rhs.r, 2.0) + std::pow(lhs.g - rhs.g, 2.0) +
                 std::pow(lhs.b - rhs.b, 2.0));
 }
 
-inline void Compare(const Image& actual, const Image& expected) {
+inline void Compare(const raytracer::Image& actual, const raytracer::Image& expected) {
     static const double kEps = 2;
     int matches = 0;
 

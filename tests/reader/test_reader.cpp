@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "scene.h"
+#include "reader.cpp"
 
 #ifndef PROGRAM_DIR
 #define PROGRAM_DIR "./"
@@ -14,13 +14,13 @@
 
 TEST_CASE("Read without errors", "[raytracer]") {
     const std::string dir_path(PROGRAM_DIR);
-    auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
+    auto scene = scene::ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
 }
 
 TEST_CASE("Materials read correctly") {
     const std::string dir_path(PROGRAM_DIR);
-    auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
-    const auto& materials = Scene::BuildMaterialsFromPointers(scene.materials_pointers_);
+    auto scene = scene::ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
+    const auto& materials = scene::Scene::BuildMaterialsFromPointers(scene.materials_pointers_);
 
     SECTION("Number of materials") {
         REQUIRE(materials.size() == 8);
@@ -41,7 +41,7 @@ TEST_CASE("Materials read correctly") {
 
 TEST_CASE("Objects read correctly") {
     const std::string dir_path(PROGRAM_DIR);
-    auto scene = ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
+    auto scene = scene::ReadScene(dir_path+ "classic_box/CornellBox-Original.obj");
     const auto& objects = scene.GetObjects();
 
     SECTION("Number of objects") {

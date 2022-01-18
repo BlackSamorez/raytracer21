@@ -6,6 +6,7 @@
 #include "vector.h"
 #include "ray.h"
 
+namespace scene {
 class Sky {
 public:
     enum class StrongestDirection { kFront, kBack, kTop, kBottom, kRight, kLeft };
@@ -13,7 +14,7 @@ public:
 public:
     Sky() : image_({}) {}
 
-    explicit Sky(std::shared_ptr<Image> image) : image_(std::move(image)) {
+    explicit Sky(std::shared_ptr<raytracer::Image> image) : image_(std::move(image)) {
     }
 
 public:
@@ -44,7 +45,7 @@ public:
         auto cube_v = ray.GetDirection();
         cube_v = cube_v / std::fabs(*std::max_element(cube_v.data_.begin(), cube_v.data_.end(),
                                            [](auto a, auto b) { return fabs(a) < fabs(b); }));
-        RGB color{};
+        raytracer::RGB color{};
         switch (GetStrongestDirection(ray.GetDirection())) {
                 int x, y;
             case StrongestDirection::kFront:
@@ -82,5 +83,6 @@ public:
     }
 
 public:
-    std::shared_ptr<Image> image_;
+    std::shared_ptr<raytracer::Image> image_;
 };
+}  // namespace scene

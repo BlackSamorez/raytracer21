@@ -4,13 +4,13 @@
 #include <jpeglib.h>
 #include <iostream>
 
+namespace raytracer {
 struct RGB {
     int r, g, b;
     bool operator==(const RGB& rhs) const {
         return r == rhs.r && g == rhs.g && b == rhs.b;
     }
 };
-
 class Image {
 public:
     Image(int width, int height) {
@@ -223,3 +223,4 @@ private:
     int width_, height_;
     png_bytep* bytes_;
 };
+}  // namespace raytracer

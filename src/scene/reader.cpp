@@ -1,5 +1,6 @@
 #pragma once
 
+#include "scene.h"
 #include "material.h"
 #include "vector.h"
 #include "object.h"
@@ -14,8 +15,7 @@
 #include <sstream>
 #include <memory>
 
-typedef std::map<std::string, std::unique_ptr<Material>> MaterialPointers;
-
+namespace {
 inline geometry::Vector3D<> GetThreeNumbers(const std::vector<std::string>& attributes,
                                             int begin = 1) {
     return {std::stod(attributes[begin]), std::stod(attributes[begin + 1]),
@@ -60,45 +60,10 @@ inline std::string GetFolderPathFromFilePath(const std::string& s) {
     }
     return "";
 }
+}  // namespace
 
-class Scene {
-public:
-    [[nodiscard]] const std::vector<Object>& GetObjects() const {
-        return objects_;
-    }
-
-    [[nodiscard]] const std::vector<SphereObject>& GetSphereObjects() const {
-        return sphere_objects_;
-    }
-
-    [[nodiscard]] const std::vector<Light>& GetLights() const {
-        return lights_;
-    }
-
-public:
-    [[nodiscard]] static std::map<std::string, Material> BuildMaterialsFromPointers(
-        const MaterialPointers& pointers) {
-        static std::map<std::string, Material> materials;
-        if (materials.size() != pointers.size()) {  // None of them are supposed to change
-            for (const auto& [name, pointer] : pointers) {
-                materials[name] = *pointer;
-            }
-        }
-        return materials;
-    }
-
-public:
-    const std::vector<Object> objects_;
-    const std::vector<SphereObject> sphere_objects_;
-    const std::vector<Light> lights_;
-    const Sky sky_;
-
-public:  // heap held
-    const MaterialPointers materials_pointers_;
-    const std::vector<std::unique_ptr<geometry::Vector3D<>>> normals_;
-};
-
-MaterialPointers ConstructMaterials(std::istream& input) {
+namespace scene {
+std::map<std::string, std::unique_ptr<scene::Material>> ConstructMaterials(std::istream& input) {
     std::map<std::string, std::unique_ptr<Material>> materials;
 
     std::string line;
@@ -153,19 +118,17 @@ MaterialPointers ConstructMaterials(std::istream& input) {
 
     return materials;
 }
-
-MaterialPointers ReadMaterials(std::string_view filename) {
+std::map<std::string, std::unique_ptr<scene::Material>> ReadMaterials(std::string_view filename) {
     std::ifstream infile(static_cast<std::string>(filename));
     return ConstructMaterials(infile);
 }
-
 Scene ConstructScene(std::istream& input, const std::string& path) {
     // Material fields
     std::vector<Object> objects;
     std::vector<SphereObject> sphere_objects;
     std::vector<Light> lights;
     Sky sky;
-    MaterialPointers materials_pointers;
+    std::map<std::string, std::unique_ptr<scene::Material>> materials_pointers;
     std::vector<std::unique_ptr<geometry::Vector3D<>>> normal_pointers;
 
     // Aux objects
@@ -252,7 +215,7 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
         }
 
         if (attributes[0] == "Sky") {
-            sky.image_ = std::make_shared<Image>(path + "/" + attributes[3]);
+            sky.image_ = std::make_shared<raytracer::Image>(path + "/" + attributes[3]);
         }
     }
 
@@ -263,8 +226,8 @@ Scene ConstructScene(std::istream& input, const std::string& path) {
             std::move(materials_pointers),
             std::move(normal_pointers)};
 }
-
 Scene ReadScene(std::string_view filename) {
     std::ifstream infile(static_cast<std::string>(filename));
     return ConstructScene(infile, GetFolderPathFromFilePath(static_cast<std::string>(filename)));
 }
+}  // namespace scene
