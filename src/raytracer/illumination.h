@@ -2,14 +2,14 @@
 
 #include <string>
 
-#include "vector.h"
-#include "material.h"
-#include "scene.h"
-#include "light.h"
-#include "object.h"
-#include "ray.h"
-#include "geometry.h"
-#include "skybox.h"
+#include "geometry/vector.h"
+#include "geometry/intersection.h"
+#include "geometry/ray.h"
+#include "geometry/geometry.h"
+#include "scene/material.h"
+#include "scene/light.h"
+#include "scene/object.h"
+#include "scene/scene.h"
 
 namespace raytracer {
 const double kEpsilon = 0.0001;

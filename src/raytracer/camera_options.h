@@ -2,7 +2,8 @@
 
 #include <array>
 #include <cmath>
-#include "vector.h"
+
+#include "geometry/vector.h"
 
 namespace raytracer {
 struct CameraOptions {

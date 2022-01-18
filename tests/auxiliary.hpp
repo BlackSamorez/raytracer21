@@ -1,6 +1,6 @@
 #pragma once
 
-#include <image.h>
+#include <raytracer/image.h>
 
 #include <cmath>
 #include <string>

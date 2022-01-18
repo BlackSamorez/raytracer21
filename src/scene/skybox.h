@@ -1,10 +1,11 @@
 #pragma once
 
 #include <utility>
+#include <memory>
 
-#include "image.h"
-#include "vector.h"
-#include "ray.h"
+#include "geometry/vector.h"
+#include "geometry/ray.h"
+#include "raytracer/image.h"
 
 namespace scene {
 class Sky {
@@ -12,7 +13,8 @@ public:
     enum class StrongestDirection { kFront, kBack, kTop, kBottom, kRight, kLeft };
 
 public:
-    Sky() : image_({}) {}
+    Sky() : image_({}) {
+    }
 
     explicit Sky(std::shared_ptr<raytracer::Image> image) : image_(std::move(image)) {
     }
@@ -25,11 +27,11 @@ public:
                          direction.data_.begin();
         switch (max_abs) {
             case 0:
-                return (direction[0] > 0) ? StrongestDirection::kFront: StrongestDirection::kBack;
+                return (direction[0] > 0) ? StrongestDirection::kFront : StrongestDirection::kBack;
             case 1:
-                return (direction[1] > 0) ? StrongestDirection::kTop: StrongestDirection::kBottom;
+                return (direction[1] > 0) ? StrongestDirection::kTop : StrongestDirection::kBottom;
             case 2:
-                return (direction[2] > 0) ? StrongestDirection::kRight: StrongestDirection::kLeft;
+                return (direction[2] > 0) ? StrongestDirection::kRight : StrongestDirection::kLeft;
             default:
                 throw std::runtime_error("Direction guessing gone wrong");
         }
@@ -43,11 +45,12 @@ public:
 
         int block_size = image_->Width() / 4;
         auto cube_v = ray.GetDirection();
-        cube_v = cube_v / std::fabs(*std::max_element(cube_v.data_.begin(), cube_v.data_.end(),
-                                           [](auto a, auto b) { return fabs(a) < fabs(b); }));
+        cube_v =
+            cube_v / std::fabs(*std::max_element(cube_v.data_.begin(), cube_v.data_.end(),
+                                                 [](auto a, auto b) { return fabs(a) < fabs(b); }));
         raytracer::RGB color{};
         switch (GetStrongestDirection(ray.GetDirection())) {
-                int x, y;
+            int x, y;
             case StrongestDirection::kFront:
                 x = (3 * block_size) / 2 + static_cast<int>(block_size * cube_v[2] / 2);
                 y = (3 * block_size) / 2 + static_cast<int>(block_size * -cube_v[1] / 2);
@@ -79,7 +82,8 @@ public:
                 color = image_->GetPixel(y, x);
                 break;
         }
-        return {static_cast<double>(color.r) / 256, static_cast<double>(color.g) / 256, static_cast<double>(color.b) / 256};
+        return {static_cast<double>(color.r) / 256, static_cast<double>(color.g) / 256,
+                static_cast<double>(color.b) / 256};
     }
 
 public:

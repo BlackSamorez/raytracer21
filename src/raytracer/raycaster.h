@@ -1,12 +1,12 @@
 #pragma once
 
-#include "raycaster.h"
-#include "vector.h"
-#include "camera_options.h"
+#include "geometry/vector.h"
+#include "raytracer/camera_options.h"
 
+namespace raytracer {
 class RayCaster {
 public:
-    explicit RayCaster(const raytracer::CameraOptions& camera_options) {
+    explicit RayCaster(const CameraOptions& camera_options) {
         screen_height_ = camera_options.screen_height;
         screen_width_ = camera_options.screen_width;
 
@@ -25,7 +25,7 @@ public:
             up_unit_.Normalize();
         }
 
-        double pixel_size = 2 * std::tan(camera_options.fov / 2) / screen_height_;
+        double pixel_size = 2 * tan(camera_options.fov / 2) / screen_height_;
         up_unit_ *= pixel_size;
         right_unit_ *= pixel_size;
 
@@ -59,3 +59,4 @@ private:
     geometry::Vector3D<> right_unit_;
     geometry::Vector3D<> up_unit_;
 };
+}  // namespace raytracer

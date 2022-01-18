@@ -1,9 +1,13 @@
 #pragma once
 
-#include "material.h"
-#include "object.h"
-#include "light.h"
-#include "skybox.h"
+#include <vector>
+#include <memory>
+#include <map>
+
+#include "scene/material.h"
+#include "scene/object.h"
+#include "scene/light.h"
+#include "scene/skybox.h"
 
 typedef std::map<std::string, std::unique_ptr<scene::Material>> MaterialPointers;
 

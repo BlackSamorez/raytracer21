@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "reader.cpp"
+#include "scene/reader.cpp"
 
 #ifndef PROGRAM_DIR
 #define PROGRAM_DIR "./"

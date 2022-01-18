@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector.h>
-#include <triangle.h>
+#include "geometry/vector.h"
 
 namespace scene {
 struct Light {

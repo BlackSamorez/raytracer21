@@ -4,11 +4,9 @@
 #include <catch2/catch.hpp>
 
 #include <cmath>
-#include <string>
 #include <optional>
 
-#include "geometry.h"
-#include "auxiliary.hpp"
+#include "geometry/geometry.h"
 
 const double kX = 123.;
 const double kY = 456.;

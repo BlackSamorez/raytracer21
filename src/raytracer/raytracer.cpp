@@ -1,14 +1,15 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-#include "illumination.h"
-#include "image.h"
-#include "camera_options.h"
-#include "render_options.h"
-#include "raycaster.h"
-
-#include "reader.cpp"
+#include "geometry/vector.h"
+#include "scene/reader.cpp"
+#include "raytracer/illumination.h"
+#include "raytracer/image.h"
+#include "raytracer/camera_options.h"
+#include "raytracer/render_options.h"
+#include "raytracer/raycaster.h"
 
 namespace raytracer {
 void ToneMappingAndGammaCorrection(std::vector<std::vector<geometry::Vector3D<>>>& pixels) {
@@ -33,6 +34,7 @@ void ToneMappingAndGammaCorrection(std::vector<std::vector<geometry::Vector3D<>>
         }
     }
 }
+
 class Raytracer {
 public:
     Raytracer(const std::string& filename, const CameraOptions& camera_options,
@@ -181,6 +183,7 @@ private:
     RenderOptions render_options_;
     RayCaster ray_caster_;
 };
+
 Image Render(const std::string& filename, const CameraOptions& camera_options,
              const RenderOptions& render_options) {
     return Raytracer(filename, camera_options, render_options).Render();

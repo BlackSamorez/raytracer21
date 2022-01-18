@@ -10,9 +10,7 @@ set(CMAKE_CXX_FLAGS_ASAN "-g -fsanitize=address,undefined -fno-sanitize-recover=
         CACHE STRING "Compiler flags in asan build"
         FORCE)
 
-include_directories(src/geometry)
-include_directories(src/raytracer)
-include_directories(src/scene)
+include_directories(src)
 
 enable_testing()
 add_subdirectory(tests)

@@ -7,11 +7,12 @@
 #define PROGRAM_DIR "./"
 #endif
 
-#include "raytracer.cpp"
+#include "raytracer/raytracer.cpp"
+
 #include "auxiliary.hpp"
-#include "camera_options.h"
-#include "image.h"
-#include "render_options.h"
+#include "raytracer/camera_options.h"
+#include "raytracer/image.h"
+#include "raytracer/render_options.h"
 
 TEST_CASE("CornellBox-Original full", "[raytracer]") {
     const std::string dir_path(PROGRAM_DIR);

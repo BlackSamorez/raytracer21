@@ -1,7 +1,7 @@
 #pragma once
 
-#include <parameters.h>
-#include <vector.h>
+#include <geometry/parameters.h>
+#include <geometry/vector.h>
 
 namespace geometry {
 

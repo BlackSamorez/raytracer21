@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector.h>
 #include <string>
+
+#include "geometry/vector.h"
 
 namespace scene {
 struct Material {

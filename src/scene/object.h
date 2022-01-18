@@ -1,10 +1,12 @@
 #pragma once
 
-#include <triangle.h>
-#include <material.h>
-#include <sphere.h>
-
 #include <memory>
+#include <array>
+
+#include "geometry/vector.h"
+#include "geometry/triangle.h"
+#include "geometry/sphere.h"
+#include "scene/material.h"
 
 namespace scene {
 struct Object {

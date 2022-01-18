@@ -1,19 +1,19 @@
 #pragma once
 
-#include "scene.h"
-#include "material.h"
-#include "vector.h"
-#include "object.h"
-#include "light.h"
-#include "image.h"
-#include "skybox.h"
-
 #include <vector>
 #include <map>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <memory>
+
+#include "geometry/vector.h"
+#include "scene/scene.h"
+#include "scene/material.h"
+#include "scene/object.h"
+#include "scene/light.h"
+#include "scene/skybox.h"
+#include "raytracer/image.h"
 
 namespace {
 inline geometry::Vector3D<> GetThreeNumbers(const std::vector<std::string>& attributes,

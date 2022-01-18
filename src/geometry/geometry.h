@@ -1,19 +1,18 @@
 #pragma once
 
-#include <parameters.h>
-#include <vector.h>
-#include <sphere.h>
-#include <intersection.h>
-#include <triangle.h>
-#include <ray.h>
-
 #include <optional>
+
+#include <geometry/parameters.h>
+#include <geometry/vector.h>
+#include <geometry/sphere.h>
+#include <geometry/intersection.h>
+#include <geometry/triangle.h>
+#include <geometry/ray.h>
 
 namespace geometry {
 template <typename VectorNumericType>
-requires NumericTypeConstraint<VectorNumericType>
-std::optional<Intersection<VectorNumericType>> GetIntersection(
-    const Ray<VectorNumericType>& ray, const Sphere<VectorNumericType>& sphere) {
+requires NumericTypeConstraint<VectorNumericType> std::optional<Intersection<VectorNumericType>>
+GetIntersection(const Ray<VectorNumericType>& ray, const Sphere<VectorNumericType>& sphere) {
     auto center = sphere.GetCenter() - ray.GetOrigin();
 
     auto center_ray_projection = DotProduct(center, ray.GetDirection());
@@ -60,9 +59,8 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(
 }
 
 template <typename VectorNumericType>
-requires NumericTypeConstraint<VectorNumericType>
-std::optional<Intersection<VectorNumericType>> GetIntersection(
-    const Ray<VectorNumericType>& ray, const Triangle<VectorNumericType>& triangle) {
+requires NumericTypeConstraint<VectorNumericType> std::optional<Intersection<VectorNumericType>>
+GetIntersection(const Ray<VectorNumericType>& ray, const Triangle<VectorNumericType>& triangle) {
     const VectorNumericType calculation_epsilon = 0.0000001;
     auto vertex0 = triangle.GetVertex(0);
     auto vertex1 = triangle.GetVertex(1);
@@ -96,16 +94,16 @@ std::optional<Intersection<VectorNumericType>> GetIntersection(
         if (DotProduct(normal, ray.GetDirection()) > 0) {
             normal -= 2 * normal;
         }
-        return Intersection<VectorNumericType>{intersection_point, normal, Length(intersection_point - ray.GetOrigin())};
+        return Intersection<VectorNumericType>{intersection_point, normal,
+                                               Length(intersection_point - ray.GetOrigin())};
     } else {
         return {};  // This means that there is a line intersection but not a ray intersection.
     }
 }
 
 template <typename VectorNumericType>
-requires NumericTypeConstraint<VectorNumericType>
-Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericType>& triangle,
-                                                 const Vector3D<VectorNumericType>& point) {
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType> GetBarycentricCoords(
+    const Triangle<VectorNumericType>& triangle, const Vector3D<VectorNumericType>& point) {
     auto s_bcx = Triangle({triangle.GetVertex(1), triangle.GetVertex(2), point}).Area() / 2;
     auto s_cax = Triangle({triangle.GetVertex(2), triangle.GetVertex(0), point}).Area() / 2;
     auto s_abx = Triangle({triangle.GetVertex(0), triangle.GetVertex(1), point}).Area() / 2;
@@ -115,9 +113,9 @@ Vector3D<VectorNumericType> GetBarycentricCoords(const Triangle<VectorNumericTyp
 
 template <typename VectorNumericType, typename EtaNumericType>
 requires NumericTypeConstraint<VectorNumericType> && NumericTypeConstraint<EtaNumericType>
-std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericType>& ray,
-                                                   const Vector3D<VectorNumericType>& normal,
-                                                   EtaNumericType eta) {
+    std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericType>& ray,
+                                                       const Vector3D<VectorNumericType>& normal,
+                                                       EtaNumericType eta) {
     auto normalized_ray = ray;
     normalized_ray.Normalize();
 
@@ -129,9 +127,8 @@ std::optional<Vector3D<VectorNumericType>> Refract(const Vector3D<VectorNumericT
 }
 
 template <typename VectorNumericType>
-requires NumericTypeConstraint<VectorNumericType>
-Vector3D<VectorNumericType> Reflect(const Vector3D<VectorNumericType>& ray,
-                                    const Vector3D<VectorNumericType>& normal) {
+requires NumericTypeConstraint<VectorNumericType> Vector3D<VectorNumericType> Reflect(
+    const Vector3D<VectorNumericType>& ray, const Vector3D<VectorNumericType>& normal) {
     return ray - normal * DotProduct(normal, ray) * 2;
 }
 }  // namespace geometry

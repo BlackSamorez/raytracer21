@@ -1,12 +1,12 @@
 #pragma once
 
-#include <parameters.h>
-
 #include <array>
 #include <cmath>
 #include <iostream>
 #include <initializer_list>
 #include <algorithm>
+
+#include <geometry/parameters.h>
 
 namespace geometry {
 

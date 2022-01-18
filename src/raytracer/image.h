@@ -1,8 +1,9 @@
 #pragma once
 
+#include <iostream>
+
 #include <png.h>
 #include <jpeglib.h>
-#include <iostream>
 
 namespace raytracer {
 struct RGB {
